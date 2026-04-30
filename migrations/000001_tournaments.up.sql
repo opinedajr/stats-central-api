@@ -1,0 +1,23 @@
+CREATE TABLE tournaments (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  sokkerpro_id int(11) DEFAULT NULL,
+  playscores_id int(11) DEFAULT NULL,
+  sofascore_id int(11) DEFAULT NULL,
+  sofascore_season_id int(11) DEFAULT NULL,
+  active tinyint(4) NOT NULL DEFAULT 1,
+  name varchar(40) NOT NULL,
+  country varchar(40) NOT NULL,
+  division tinyint(2) DEFAULT NULL,
+  season varchar(20) DEFAULT NULL,
+  round int(11) DEFAULT NULL,
+  stats tinyint(1) NOT NULL DEFAULT 1,
+  bot_gols tinyint(1) DEFAULT 0,
+  bot_cantos tinyint(1) DEFAULT 0,
+  bot_minutos tinyint(1) DEFAULT 0,
+  bot_rajada tinyint(1) DEFAULT 0,
+  created_at datetime NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY sofascore_id (sofascore_id),
+  UNIQUE KEY sokkerpro_id (sokkerpro_id)
+) ENGINE=InnoDB AUTO_INCREMENT=197 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci
