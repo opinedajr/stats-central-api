@@ -8,6 +8,7 @@ import (
 	"github.com/opinedajr/stats-central-api/internal/infrastructure/database"
 	"github.com/opinedajr/stats-central-api/internal/shared/config"
 	sloglogger "github.com/opinedajr/stats-central-api/internal/shared/logger"
+	"github.com/opinedajr/stats-central-api/internal/tournament"
 	"gorm.io/gorm"
 )
 
@@ -21,14 +22,18 @@ type Container struct {
 	handlers     *HandlerDependencies
 }
 
-type RepositoryDependencies struct{}
+type RepositoryDependencies struct {
+	tournamentRepository tournament.TournamentRepository
+}
 
 type HandlerDependencies struct {
 	healthcheckHandler *healthcheck.Handler
+	tournamentHandler  *tournament.TournamentHandler
 }
 
 type ServiceDependencies struct {
 	healthcheckService *healthcheck.Service
+	tournamentService  tournament.TournamentService
 }
 
 func NewContainer() *Container {
@@ -96,4 +101,25 @@ func (c *Container) HealthCheckHandler() *healthcheck.Handler {
 		c.handlers.healthcheckHandler = healthcheck.NewHandler(c.HealthCheckService())
 	}
 	return c.handlers.healthcheckHandler
+}
+
+func (c *Container) TournamentRepository() tournament.TournamentRepository {
+	if c.repositories.tournamentRepository == nil {
+		c.repositories.tournamentRepository = tournament.NewMysqlTournamentRepository(c.DB())
+	}
+	return c.repositories.tournamentRepository
+}
+
+func (c *Container) TournamentService() tournament.TournamentService {
+	if c.services.tournamentService == nil {
+		c.services.tournamentService = tournament.NewTournamentService(c.TournamentRepository(), c.Logger())
+	}
+	return c.services.tournamentService
+}
+
+func (c *Container) TournamentHandler() *tournament.TournamentHandler {
+	if c.handlers.tournamentHandler == nil {
+		c.handlers.tournamentHandler = tournament.NewTournamentHandler(c.TournamentService(), c.Logger())
+	}
+	return c.handlers.tournamentHandler
 }

@@ -13,5 +13,17 @@ func main() {
 
 	r.GET("/health", container.HealthCheckHandler().Handle)
 
+	v1 := r.Group("/v1")
+	{
+		tournaments := v1.Group("/tournaments")
+		{
+			tournaments.POST("", container.TournamentHandler().Create)
+			tournaments.GET("", container.TournamentHandler().List)
+			tournaments.GET("/:tournamentId", container.TournamentHandler().Get)
+			tournaments.PUT("/:tournamentId", container.TournamentHandler().Update)
+			tournaments.PATCH("/:tournamentId/status", container.TournamentHandler().UpdateStatus)
+		}
+	}
+
 	log.Fatal(r.Run(":3030"))
 }
