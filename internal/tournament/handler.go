@@ -5,20 +5,19 @@ import (
 	"net/http"
 	"strconv"
 
-	"log/slog"
-
 	"github.com/gin-gonic/gin"
 	"github.com/opinedajr/stats-central-api/internal/shared/api"
+	"github.com/opinedajr/stats-central-api/internal/shared/logger"
 )
 
 var errInvalidID = errors.New("invalid id")
 
 type TournamentHandler struct {
 	service TournamentService
-	logger  *slog.Logger
+	logger  logger.Logger
 }
 
-func NewTournamentHandler(service TournamentService, logger *slog.Logger) *TournamentHandler {
+func NewTournamentHandler(service TournamentService, logger logger.Logger) *TournamentHandler {
 	return &TournamentHandler{
 		service: service,
 		logger:  logger,
@@ -27,10 +26,11 @@ func NewTournamentHandler(service TournamentService, logger *slog.Logger) *Tourn
 
 func (h *TournamentHandler) Create(c *gin.Context) {
 	defer func() { _ = c.Request.Body.Close() }()
+	ctx := c.Request.Context()
 
 	var input CreateTournamentInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		h.logger.Error("invalid request body", "error", err)
+		h.logger.Error(ctx, "invalid request body", "error", err)
 		c.JSON(http.StatusBadRequest, api.Response[struct{}]{
 			Error: &api.APIError{
 				Code:    "VALIDATION_ERROR",
@@ -40,7 +40,7 @@ func (h *TournamentHandler) Create(c *gin.Context) {
 		return
 	}
 
-	output, err := h.service.CreateTournament(c.Request.Context(), input)
+	output, err := h.service.CreateTournament(ctx, input)
 	if err != nil {
 		h.handleError(c, err)
 		return
@@ -122,10 +122,11 @@ func (h *TournamentHandler) Get(c *gin.Context) {
 
 func (h *TournamentHandler) Update(c *gin.Context) {
 	defer func() { _ = c.Request.Body.Close() }()
+	ctx := c.Request.Context()
 
 	var input UpdateTournamentInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		h.logger.Error("invalid request body", "error", err)
+		h.logger.Error(ctx, "invalid request body", "error", err)
 		c.JSON(http.StatusBadRequest, api.Response[struct{}]{
 			Error: &api.APIError{
 				Code:    "VALIDATION_ERROR",
@@ -142,7 +143,7 @@ func (h *TournamentHandler) Update(c *gin.Context) {
 		return
 	}
 
-	output, err := h.service.UpdateTournament(c.Request.Context(), uint(tournamentID), input)
+	output, err := h.service.UpdateTournament(ctx, uint(tournamentID), input)
 	if err != nil {
 		h.handleError(c, err)
 		return
@@ -155,10 +156,11 @@ func (h *TournamentHandler) Update(c *gin.Context) {
 
 func (h *TournamentHandler) UpdateStatus(c *gin.Context) {
 	defer func() { _ = c.Request.Body.Close() }()
+	ctx := c.Request.Context()
 
 	var input UpdateTournamentStatusInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		h.logger.Error("invalid request body", "error", err)
+		h.logger.Error(ctx, "invalid request body", "error", err)
 		c.JSON(http.StatusBadRequest, api.Response[struct{}]{
 			Error: &api.APIError{
 				Code:    "VALIDATION_ERROR",
@@ -175,7 +177,7 @@ func (h *TournamentHandler) UpdateStatus(c *gin.Context) {
 		return
 	}
 
-	output, err := h.service.UpdateTournamentStatus(c.Request.Context(), uint(tournamentID), input.Active)
+	output, err := h.service.UpdateTournamentStatus(ctx, uint(tournamentID), input.Active)
 	if err != nil {
 		h.handleError(c, err)
 		return
@@ -187,6 +189,7 @@ func (h *TournamentHandler) UpdateStatus(c *gin.Context) {
 }
 
 func (h *TournamentHandler) handleError(c *gin.Context, err error) {
+	ctx := c.Request.Context()
 	switch {
 	case errors.Is(err, errInvalidID):
 		c.JSON(http.StatusBadRequest, api.Response[struct{}]{
@@ -210,7 +213,7 @@ func (h *TournamentHandler) handleError(c *gin.Context, err error) {
 			},
 		})
 	case errors.Is(err, ErrDatabaseError):
-		h.logger.Error("database error", "error", err)
+		h.logger.Error(ctx, "database error", "error", err)
 		c.JSON(http.StatusInternalServerError, api.Response[struct{}]{
 			Error: &api.APIError{
 				Code:    "DATABASE_ERROR",
@@ -218,7 +221,7 @@ func (h *TournamentHandler) handleError(c *gin.Context, err error) {
 			},
 		})
 	default:
-		h.logger.Error("unexpected error", "error", err)
+		h.logger.Error(ctx, "unexpected error", "error", err)
 		c.JSON(http.StatusInternalServerError, api.Response[struct{}]{
 			Error: &api.APIError{
 				Code:    "INTERNAL_ERROR",

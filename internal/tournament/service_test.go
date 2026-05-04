@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/opinedajr/stats-central-api/internal/shared/logger"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"log/slog"
 )
 
 type MockTournamentRepository struct {
@@ -51,11 +51,11 @@ func TestCreateTournament(t *testing.T) {
 	active := true
 
 	tests := []struct {
-		name           string
-		input          CreateTournamentInput
-		setupMock      func(*MockTournamentRepository)
-		wantErr        error
-		assertOutput   func(*testing.T, *TournamentOutput)
+		name         string
+		input        CreateTournamentInput
+		setupMock    func(*MockTournamentRepository)
+		wantErr      error
+		assertOutput func(*testing.T, *TournamentOutput)
 	}{
 		{
 			name: "success",
@@ -110,7 +110,7 @@ func TestCreateTournament(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockRepo := new(MockTournamentRepository)
-			logger := slog.Default()
+			logger := logger.NewLogger("error")
 			service := NewTournamentService(mockRepo, logger)
 
 			ctx := context.Background()
@@ -227,7 +227,7 @@ func TestListTournaments(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockRepo := new(MockTournamentRepository)
-			logger := slog.Default()
+			logger := logger.NewLogger("error")
 			service := NewTournamentService(mockRepo, logger)
 
 			ctx := context.Background()
@@ -299,7 +299,7 @@ func TestGetTournamentByID(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockRepo := new(MockTournamentRepository)
-			logger := slog.Default()
+			logger := logger.NewLogger("error")
 			service := NewTournamentService(mockRepo, logger)
 
 			ctx := context.Background()
@@ -393,7 +393,7 @@ func TestUpdateTournament(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockRepo := new(MockTournamentRepository)
-			logger := slog.Default()
+			logger := logger.NewLogger("error")
 			service := NewTournamentService(mockRepo, logger)
 
 			ctx := context.Background()
@@ -480,7 +480,7 @@ func TestUpdateTournamentStatus(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockRepo := new(MockTournamentRepository)
-			logger := slog.Default()
+			logger := logger.NewLogger("error")
 			service := NewTournamentService(mockRepo, logger)
 
 			ctx := context.Background()
@@ -510,8 +510,8 @@ func TestToTournamentOutput(t *testing.T) {
 	round := 15
 
 	tests := []struct {
-		name    string
-		input   *Tournament
+		name   string
+		input  *Tournament
 		assert func(*testing.T, *TournamentOutput)
 	}{
 		{

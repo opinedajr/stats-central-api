@@ -9,10 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"log/slog"
-
 	"github.com/gin-gonic/gin"
 	"github.com/opinedajr/stats-central-api/internal/shared/api"
+	"github.com/opinedajr/stats-central-api/internal/shared/logger"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -171,7 +170,7 @@ func TestCreateTournamentHandler(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockService := new(MockTournamentServiceForHandler)
-			logger := slog.Default()
+			logger := logger.NewLogger("error")
 			handler := NewTournamentHandler(mockService, logger)
 
 			tt.setupMock(mockService)
@@ -320,7 +319,7 @@ func TestListTournamentsHandler(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockService := new(MockTournamentServiceForHandler)
-			logger := slog.Default()
+			logger := logger.NewLogger("error")
 			handler := NewTournamentHandler(mockService, logger)
 
 			tt.setupMock(mockService)
@@ -418,7 +417,7 @@ func TestGetTournamentHandler(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockService := new(MockTournamentServiceForHandler)
-			logger := slog.Default()
+			logger := logger.NewLogger("error")
 			handler := NewTournamentHandler(mockService, logger)
 
 			tt.setupMock(mockService)
@@ -537,7 +536,7 @@ func TestUpdateTournamentHandler(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockService := new(MockTournamentServiceForHandler)
-			logger := slog.Default()
+			logger := logger.NewLogger("error")
 			handler := NewTournamentHandler(mockService, logger)
 
 			tt.setupMock(mockService)
@@ -571,9 +570,9 @@ func TestUpdateTournamentStatusHandler(t *testing.T) {
 		assertMock     func(*testing.T, *MockTournamentServiceForHandler)
 	}{
 		{
-			name:         "success activate",
-			tournamentID: "123",
-			active:       true,
+			name:           "success activate",
+			tournamentID:   "123",
+			active:         true,
 			expectedStatus: http.StatusOK,
 			setupMock: func(m *MockTournamentServiceForHandler) {
 				expectedOutput := &TournamentOutput{
@@ -597,9 +596,9 @@ func TestUpdateTournamentStatusHandler(t *testing.T) {
 			},
 		},
 		{
-			name:         "success deactivate",
-			tournamentID: "123",
-			active:       false,
+			name:           "success deactivate",
+			tournamentID:   "123",
+			active:         false,
 			expectedStatus: http.StatusOK,
 			setupMock: func(m *MockTournamentServiceForHandler) {
 				expectedOutput := &TournamentOutput{
@@ -623,9 +622,9 @@ func TestUpdateTournamentStatusHandler(t *testing.T) {
 			},
 		},
 		{
-			name:         "invalid id",
-			tournamentID: "invalid",
-			active:       true,
+			name:           "invalid id",
+			tournamentID:   "invalid",
+			active:         true,
 			expectedStatus: http.StatusBadRequest,
 			setupMock:      func(m *MockTournamentServiceForHandler) {},
 			assertResponse: func(t *testing.T, body []byte) {
@@ -640,9 +639,9 @@ func TestUpdateTournamentStatusHandler(t *testing.T) {
 			},
 		},
 		{
-			name:         "tournament not found",
-			tournamentID: "99999",
-			active:       true,
+			name:           "tournament not found",
+			tournamentID:   "99999",
+			active:         true,
 			expectedStatus: http.StatusNotFound,
 			setupMock: func(m *MockTournamentServiceForHandler) {
 				m.On("UpdateTournamentStatus", mock.Anything, uint(99999), true).Return(nil, ErrTournamentNotFound).Once()
@@ -663,7 +662,7 @@ func TestUpdateTournamentStatusHandler(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockService := new(MockTournamentServiceForHandler)
-			logger := slog.Default()
+			logger := logger.NewLogger("error")
 			handler := NewTournamentHandler(mockService, logger)
 
 			tt.setupMock(mockService)

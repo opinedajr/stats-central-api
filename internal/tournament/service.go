@@ -2,7 +2,8 @@ package tournament
 
 import (
 	"context"
-	"log/slog"
+
+	"github.com/opinedajr/stats-central-api/internal/shared/logger"
 )
 
 type TournamentService interface {
@@ -15,10 +16,10 @@ type TournamentService interface {
 
 type tournamentService struct {
 	repo   TournamentRepository
-	logger *slog.Logger
+	logger logger.Logger
 }
 
-func NewTournamentService(repo TournamentRepository, logger *slog.Logger) TournamentService {
+func NewTournamentService(repo TournamentRepository, logger logger.Logger) TournamentService {
 	return &tournamentService{
 		repo:   repo,
 		logger: logger,
@@ -41,11 +42,11 @@ func (s *tournamentService) CreateTournament(ctx context.Context, input CreateTo
 	}
 
 	if err := s.repo.Create(ctx, tournament); err != nil {
-		s.logger.Error("failed to create tournament", "error", err, "name", input.Name)
+		s.logger.Error(ctx, "failed to create tournament", "error", err, "name", input.Name)
 		return nil, err
 	}
 
-	s.logger.Info("tournament created", "tournament_id", tournament.ID, "name", input.Name, "country", input.Country, "active", active, "outcome", "success")
+	s.logger.Info(ctx, "tournament created", "tournament_id", tournament.ID, "name", input.Name, "country", input.Country, "active", active, "outcome", "success")
 
 	return toTournamentOutput(tournament), nil
 }
@@ -65,7 +66,7 @@ func (s *tournamentService) ListTournaments(ctx context.Context, filter Tourname
 
 	tournaments, total, err := s.repo.List(ctx, filter, page, pageSize)
 	if err != nil {
-		s.logger.Error("failed to list tournaments", "error", err)
+		s.logger.Error(ctx, "failed to list tournaments", "error", err)
 		return nil, 0, err
 	}
 
@@ -80,7 +81,7 @@ func (s *tournamentService) ListTournaments(ctx context.Context, filter Tourname
 func (s *tournamentService) GetTournamentByID(ctx context.Context, id uint) (*TournamentOutput, error) {
 	tournament, err := s.repo.FindByID(ctx, id)
 	if err != nil {
-		s.logger.Error("tournament not found", "error", err, "tournament_id", id)
+		s.logger.Error(ctx, "tournament not found", "error", err, "tournament_id", id)
 		return nil, err
 	}
 
@@ -90,7 +91,7 @@ func (s *tournamentService) GetTournamentByID(ctx context.Context, id uint) (*To
 func (s *tournamentService) UpdateTournament(ctx context.Context, id uint, input UpdateTournamentInput) (*TournamentOutput, error) {
 	_, err := s.repo.FindByID(ctx, id)
 	if err != nil {
-		s.logger.Error("tournament not found", "error", err, "tournament_id", id)
+		s.logger.Error(ctx, "tournament not found", "error", err, "tournament_id", id)
 		return nil, err
 	}
 
@@ -104,34 +105,34 @@ func (s *tournamentService) UpdateTournament(ctx context.Context, id uint, input
 	}
 
 	if err := s.repo.Update(ctx, tournament); err != nil {
-		s.logger.Error("failed to update tournament", "error", err, "tournament_id", id)
+		s.logger.Error(ctx, "failed to update tournament", "error", err, "tournament_id", id)
 		return nil, err
 	}
 
 	updated, err := s.repo.FindByID(ctx, id)
 	if err != nil {
-		s.logger.Error("failed to retrieve updated tournament", "error", err, "tournament_id", id)
+		s.logger.Error(ctx, "failed to retrieve updated tournament", "error", err, "tournament_id", id)
 		return nil, err
 	}
 
-	s.logger.Info("tournament updated", "tournament_id", id, "name", input.Name, "country", input.Country, "outcome", "success")
+	s.logger.Info(ctx, "tournament updated", "tournament_id", id, "name", input.Name, "country", input.Country, "outcome", "success")
 
 	return toTournamentOutput(updated), nil
 }
 
 func (s *tournamentService) UpdateTournamentStatus(ctx context.Context, id uint, active bool) (*TournamentOutput, error) {
 	if err := s.repo.UpdateStatus(ctx, id, active); err != nil {
-		s.logger.Error("failed to update tournament status", "error", err, "tournament_id", id, "active", active)
+		s.logger.Error(ctx, "failed to update tournament status", "error", err, "tournament_id", id, "active", active)
 		return nil, err
 	}
 
 	updated, err := s.repo.FindByID(ctx, id)
 	if err != nil {
-		s.logger.Error("failed to retrieve updated tournament", "error", err, "tournament_id", id)
+		s.logger.Error(ctx, "failed to retrieve updated tournament", "error", err, "tournament_id", id)
 		return nil, err
 	}
 
-	s.logger.Info("tournament status updated", "tournament_id", id, "active", active, "outcome", "success")
+	s.logger.Info(ctx, "tournament status updated", "tournament_id", id, "active", active, "outcome", "success")
 
 	return toTournamentOutput(updated), nil
 }
