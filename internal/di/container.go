@@ -23,7 +23,7 @@ type Container struct {
 }
 
 type RepositoryDependencies struct {
-	tournamentRepository tournament.TournamentRepository
+	tournamentRepository tournament.Repository
 }
 
 type HandlerDependencies struct {
@@ -33,7 +33,7 @@ type HandlerDependencies struct {
 
 type ServiceDependencies struct {
 	healthcheckService *healthcheck.Service
-	tournamentService  tournament.TournamentService
+	tournamentService  tournament.Service
 }
 
 func NewContainer() *Container {
@@ -103,16 +103,16 @@ func (c *Container) HealthCheckHandler() *healthcheck.Handler {
 	return c.handlers.healthcheckHandler
 }
 
-func (c *Container) TournamentRepository() tournament.TournamentRepository {
+func (c *Container) TournamentRepository() tournament.Repository {
 	if c.repositories.tournamentRepository == nil {
-		c.repositories.tournamentRepository = tournament.NewMysqlTournamentRepository(c.DB())
+		c.repositories.tournamentRepository = tournament.NewMysqlRepository(c.DB())
 	}
 	return c.repositories.tournamentRepository
 }
 
-func (c *Container) TournamentService() tournament.TournamentService {
+func (c *Container) TournamentService() tournament.Service {
 	if c.services.tournamentService == nil {
-		c.services.tournamentService = tournament.NewTournamentService(c.TournamentRepository(), c.Logger())
+		c.services.tournamentService = tournament.NewService(c.TournamentRepository(), c.Logger())
 	}
 	return c.services.tournamentService
 }

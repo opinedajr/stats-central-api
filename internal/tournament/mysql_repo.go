@@ -2,28 +2,29 @@ package tournament
 
 import (
 	"context"
+	"errors"
 
 	"gorm.io/gorm"
 )
 
-type mysqlTournamentRepository struct {
+type mysqlRepository struct {
 	db *gorm.DB
 }
 
-func NewMysqlTournamentRepository(db *gorm.DB) TournamentRepository {
-	return &mysqlTournamentRepository{
+func NewMysqlRepository(db *gorm.DB) Repository {
+	return &mysqlRepository{
 		db: db,
 	}
 }
 
-func (r *mysqlTournamentRepository) Create(ctx context.Context, tournament *Tournament) error {
+func (r *mysqlRepository) Create(ctx context.Context, tournament *Tournament) error {
 	if err := r.db.WithContext(ctx).Create(tournament).Error; err != nil {
 		return WrapError(ErrDatabaseError, err.Error())
 	}
 	return nil
 }
 
-func (r *mysqlTournamentRepository) Update(ctx context.Context, tournament *Tournament) error {
+func (r *mysqlRepository) Update(ctx context.Context, tournament *Tournament) error {
 	result := r.db.WithContext(ctx).Model(&Tournament{}).
 		Where("id = ?", tournament.ID).
 		Updates(map[string]interface{}{
@@ -43,7 +44,7 @@ func (r *mysqlTournamentRepository) Update(ctx context.Context, tournament *Tour
 	return nil
 }
 
-func (r *mysqlTournamentRepository) UpdateStatus(ctx context.Context, id uint, active bool) error {
+func (r *mysqlRepository) UpdateStatus(ctx context.Context, id uint, active bool) error {
 	result := r.db.WithContext(ctx).Model(&Tournament{}).
 		Where("id = ?", id).
 		Update("active", active)
@@ -57,11 +58,11 @@ func (r *mysqlTournamentRepository) UpdateStatus(ctx context.Context, id uint, a
 	return nil
 }
 
-func (r *mysqlTournamentRepository) FindByID(ctx context.Context, id uint) (*Tournament, error) {
+func (r *mysqlRepository) FindByID(ctx context.Context, id uint) (*Tournament, error) {
 	var tournament Tournament
 	err := r.db.WithContext(ctx).Where("id = ?", id).First(&tournament).Error
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrTournamentNotFound
 		}
 		return nil, WrapError(ErrDatabaseError, err.Error())
@@ -69,7 +70,7 @@ func (r *mysqlTournamentRepository) FindByID(ctx context.Context, id uint) (*Tou
 	return &tournament, nil
 }
 
-func (r *mysqlTournamentRepository) List(ctx context.Context, filter TournamentFilter, page int, pageSize int) ([]*Tournament, int64, error) {
+func (r *mysqlRepository) List(ctx context.Context, filter TournamentFilter, page int, pageSize int) ([]*Tournament, int64, error) {
 	var tournaments []*Tournament
 	var total int64
 

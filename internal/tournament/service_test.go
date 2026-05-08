@@ -10,26 +10,26 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type MockTournamentRepository struct {
+type MockRepository struct {
 	mock.Mock
 }
 
-func (m *MockTournamentRepository) Create(ctx context.Context, tournament *Tournament) error {
+func (m *MockRepository) Create(ctx context.Context, tournament *Tournament) error {
 	args := m.Called(ctx, tournament)
 	return args.Error(0)
 }
 
-func (m *MockTournamentRepository) Update(ctx context.Context, tournament *Tournament) error {
+func (m *MockRepository) Update(ctx context.Context, tournament *Tournament) error {
 	args := m.Called(ctx, tournament)
 	return args.Error(0)
 }
 
-func (m *MockTournamentRepository) UpdateStatus(ctx context.Context, id uint, active bool) error {
+func (m *MockRepository) UpdateStatus(ctx context.Context, id uint, active bool) error {
 	args := m.Called(ctx, id, active)
 	return args.Error(0)
 }
 
-func (m *MockTournamentRepository) FindByID(ctx context.Context, id uint) (*Tournament, error) {
+func (m *MockRepository) FindByID(ctx context.Context, id uint) (*Tournament, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -37,7 +37,7 @@ func (m *MockTournamentRepository) FindByID(ctx context.Context, id uint) (*Tour
 	return args.Get(0).(*Tournament), args.Error(1)
 }
 
-func (m *MockTournamentRepository) List(ctx context.Context, filter TournamentFilter, page int, pageSize int) ([]*Tournament, int64, error) {
+func (m *MockRepository) List(ctx context.Context, filter TournamentFilter, page int, pageSize int) ([]*Tournament, int64, error) {
 	args := m.Called(ctx, filter, page, pageSize)
 	if args.Get(0) == nil {
 		return nil, args.Get(1).(int64), args.Error(2)
@@ -53,7 +53,7 @@ func TestCreateTournament(t *testing.T) {
 	tests := []struct {
 		name         string
 		input        CreateTournamentInput
-		setupMock    func(*MockTournamentRepository)
+		setupMock    func(*MockRepository)
 		wantErr      error
 		assertOutput func(*testing.T, *TournamentOutput)
 	}{
@@ -66,7 +66,7 @@ func TestCreateTournament(t *testing.T) {
 				Season:   &season,
 				Active:   &active,
 			},
-			setupMock: func(m *MockTournamentRepository) {
+			setupMock: func(m *MockRepository) {
 				m.On("Create", mock.Anything, mock.AnythingOfType("*tournament.Tournament")).Return(nil).Once()
 			},
 			wantErr: nil,
@@ -82,7 +82,7 @@ func TestCreateTournament(t *testing.T) {
 				Name:    "La Liga",
 				Country: "Spain",
 			},
-			setupMock: func(m *MockTournamentRepository) {
+			setupMock: func(m *MockRepository) {
 				m.On("Create", mock.Anything, mock.AnythingOfType("*tournament.Tournament")).Return(nil).Once()
 			},
 			wantErr: nil,
@@ -100,7 +100,7 @@ func TestCreateTournament(t *testing.T) {
 				Name:    "Test Tournament",
 				Country: "England",
 			},
-			setupMock: func(m *MockTournamentRepository) {
+			setupMock: func(m *MockRepository) {
 				m.On("Create", mock.Anything, mock.AnythingOfType("*tournament.Tournament")).Return(ErrDatabaseError).Once()
 			},
 			wantErr: ErrDatabaseError,
@@ -109,9 +109,9 @@ func TestCreateTournament(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockRepo := new(MockTournamentRepository)
+			mockRepo := new(MockRepository)
 			logger := logger.NewLogger("error")
-			service := NewTournamentService(mockRepo, logger)
+			service := NewService(mockRepo, logger)
 
 			ctx := context.Background()
 			tt.setupMock(mockRepo)
@@ -164,7 +164,7 @@ func TestListTournaments(t *testing.T) {
 		filter        TournamentFilter
 		page          int
 		pageSize      int
-		setupMock     func(*MockTournamentRepository)
+		setupMock     func(*MockRepository)
 		wantErr       bool
 		wantTotal     int64
 		wantLen       int
@@ -175,7 +175,7 @@ func TestListTournaments(t *testing.T) {
 			filter:   TournamentFilter{},
 			page:     1,
 			pageSize: 20,
-			setupMock: func(m *MockTournamentRepository) {
+			setupMock: func(m *MockRepository) {
 				m.On("List", mock.Anything, TournamentFilter{}, 1, 20).Return(tournaments, int64(2), nil).Once()
 			},
 			wantErr:   false,
@@ -191,7 +191,7 @@ func TestListTournaments(t *testing.T) {
 			filter:   TournamentFilter{},
 			page:     1,
 			pageSize: 20,
-			setupMock: func(m *MockTournamentRepository) {
+			setupMock: func(m *MockRepository) {
 				m.On("List", mock.Anything, TournamentFilter{}, 1, 20).Return([]*Tournament{}, int64(0), nil).Once()
 			},
 			wantErr:   false,
@@ -203,7 +203,7 @@ func TestListTournaments(t *testing.T) {
 			filter:   TournamentFilter{},
 			page:     0,
 			pageSize: 0,
-			setupMock: func(m *MockTournamentRepository) {
+			setupMock: func(m *MockRepository) {
 				m.On("List", mock.Anything, TournamentFilter{}, 1, 20).Return([]*Tournament{}, int64(0), nil).Once()
 			},
 			wantErr:   false,
@@ -215,7 +215,7 @@ func TestListTournaments(t *testing.T) {
 			filter:   TournamentFilter{},
 			page:     1,
 			pageSize: 200,
-			setupMock: func(m *MockTournamentRepository) {
+			setupMock: func(m *MockRepository) {
 				m.On("List", mock.Anything, TournamentFilter{}, 1, 100).Return([]*Tournament{}, int64(0), nil).Once()
 			},
 			wantErr:   false,
@@ -226,9 +226,9 @@ func TestListTournaments(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockRepo := new(MockTournamentRepository)
+			mockRepo := new(MockRepository)
 			logger := logger.NewLogger("error")
-			service := NewTournamentService(mockRepo, logger)
+			service := NewService(mockRepo, logger)
 
 			ctx := context.Background()
 			tt.setupMock(mockRepo)
@@ -266,14 +266,14 @@ func TestGetTournamentByID(t *testing.T) {
 	tests := []struct {
 		name         string
 		tournamentID uint
-		setupMock    func(*MockTournamentRepository)
+		setupMock    func(*MockRepository)
 		wantErr      error
 		assertOutput func(*testing.T, *TournamentOutput)
 	}{
 		{
 			name:         "success maps to TournamentOutput",
 			tournamentID: 123,
-			setupMock: func(m *MockTournamentRepository) {
+			setupMock: func(m *MockRepository) {
 				m.On("FindByID", mock.Anything, uint(123)).Return(tournament, nil).Once()
 			},
 			wantErr: nil,
@@ -289,7 +289,7 @@ func TestGetTournamentByID(t *testing.T) {
 		{
 			name:         "repo returns ErrTournamentNotFound propagates",
 			tournamentID: 99999,
-			setupMock: func(m *MockTournamentRepository) {
+			setupMock: func(m *MockRepository) {
 				m.On("FindByID", mock.Anything, uint(99999)).Return(nil, ErrTournamentNotFound).Once()
 			},
 			wantErr: ErrTournamentNotFound,
@@ -298,9 +298,9 @@ func TestGetTournamentByID(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockRepo := new(MockTournamentRepository)
+			mockRepo := new(MockRepository)
 			logger := logger.NewLogger("error")
-			service := NewTournamentService(mockRepo, logger)
+			service := NewService(mockRepo, logger)
 
 			ctx := context.Background()
 			tt.setupMock(mockRepo)
@@ -351,7 +351,7 @@ func TestUpdateTournament(t *testing.T) {
 		name         string
 		tournamentID uint
 		input        UpdateTournamentInput
-		setupMock    func(*MockTournamentRepository)
+		setupMock    func(*MockRepository)
 		wantErr      error
 		assertOutput func(*testing.T, *TournamentOutput)
 	}{
@@ -364,7 +364,7 @@ func TestUpdateTournament(t *testing.T) {
 				Division: &updatedDivision,
 				Season:   &updatedSeason,
 			},
-			setupMock: func(m *MockTournamentRepository) {
+			setupMock: func(m *MockRepository) {
 				m.On("FindByID", mock.Anything, uint(123)).Return(existingTournament, nil).Once()
 				m.On("Update", mock.Anything, mock.AnythingOfType("*tournament.Tournament")).Return(nil).Once()
 				m.On("FindByID", mock.Anything, uint(123)).Return(updatedTournament, nil).Once()
@@ -383,7 +383,7 @@ func TestUpdateTournament(t *testing.T) {
 				Name:    "Updated Tournament",
 				Country: "England",
 			},
-			setupMock: func(m *MockTournamentRepository) {
+			setupMock: func(m *MockRepository) {
 				m.On("FindByID", mock.Anything, uint(99999)).Return(nil, ErrTournamentNotFound).Once()
 			},
 			wantErr: ErrTournamentNotFound,
@@ -392,9 +392,9 @@ func TestUpdateTournament(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockRepo := new(MockTournamentRepository)
+			mockRepo := new(MockRepository)
 			logger := logger.NewLogger("error")
-			service := NewTournamentService(mockRepo, logger)
+			service := NewService(mockRepo, logger)
 
 			ctx := context.Background()
 			tt.setupMock(mockRepo)
@@ -436,7 +436,7 @@ func TestUpdateTournamentStatus(t *testing.T) {
 		name         string
 		tournamentID uint
 		active       bool
-		setupMock    func(*MockTournamentRepository)
+		setupMock    func(*MockRepository)
 		wantErr      error
 		assertOutput func(*testing.T, *TournamentOutput)
 	}{
@@ -444,7 +444,7 @@ func TestUpdateTournamentStatus(t *testing.T) {
 			name:         "success activate calls repo.UpdateStatus with correct args returns updated TournamentOutput",
 			tournamentID: 123,
 			active:       true,
-			setupMock: func(m *MockTournamentRepository) {
+			setupMock: func(m *MockRepository) {
 				m.On("UpdateStatus", mock.Anything, uint(123), true).Return(nil).Once()
 				m.On("FindByID", mock.Anything, uint(123)).Return(activatedTournament, nil).Once()
 			},
@@ -457,7 +457,7 @@ func TestUpdateTournamentStatus(t *testing.T) {
 			name:         "success deactivate calls repo.UpdateStatus with correct args returns updated TournamentOutput",
 			tournamentID: 123,
 			active:       false,
-			setupMock: func(m *MockTournamentRepository) {
+			setupMock: func(m *MockRepository) {
 				m.On("UpdateStatus", mock.Anything, uint(123), false).Return(nil).Once()
 				m.On("FindByID", mock.Anything, uint(123)).Return(deactivatedTournament, nil).Once()
 			},
@@ -470,7 +470,7 @@ func TestUpdateTournamentStatus(t *testing.T) {
 			name:         "repo returns ErrTournamentNotFound propagated",
 			tournamentID: 99999,
 			active:       true,
-			setupMock: func(m *MockTournamentRepository) {
+			setupMock: func(m *MockRepository) {
 				m.On("UpdateStatus", mock.Anything, uint(99999), true).Return(ErrTournamentNotFound).Once()
 			},
 			wantErr: ErrTournamentNotFound,
@@ -479,9 +479,9 @@ func TestUpdateTournamentStatus(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockRepo := new(MockTournamentRepository)
+			mockRepo := new(MockRepository)
 			logger := logger.NewLogger("error")
-			service := NewTournamentService(mockRepo, logger)
+			service := NewService(mockRepo, logger)
 
 			ctx := context.Background()
 			tt.setupMock(mockRepo)

@@ -2,7 +2,7 @@ package tournament
 
 import "context"
 
-type TournamentRepository interface {
+type Repository interface {
 	Create(ctx context.Context, tournament *Tournament) error
 	Update(ctx context.Context, tournament *Tournament) error
 	UpdateStatus(ctx context.Context, id uint, active bool) error

@@ -23,7 +23,7 @@ func setupSuite(t *testing.T) *gorm.DB {
 func TestMysqlTournamentRepository_Create(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		db := setupSuite(t)
-		repo := NewMysqlTournamentRepository(db)
+		repo := NewMysqlRepository(db)
 		ctx := context.Background()
 
 		division := 1
@@ -54,7 +54,7 @@ func TestMysqlTournamentRepository_Create(t *testing.T) {
 
 	t.Run("success with optional fields nil", func(t *testing.T) {
 		db := setupSuite(t)
-		repo := NewMysqlTournamentRepository(db)
+		repo := NewMysqlRepository(db)
 		ctx := context.Background()
 
 		tournament := &Tournament{
@@ -76,7 +76,7 @@ func TestMysqlTournamentRepository_Create(t *testing.T) {
 func TestMysqlTournamentRepository_List(t *testing.T) {
 	t.Run("success with multiple rows", func(t *testing.T) {
 		db := setupSuite(t)
-		repo := NewMysqlTournamentRepository(db)
+		repo := NewMysqlRepository(db)
 		ctx := context.Background()
 
 		division1 := 1
@@ -112,7 +112,7 @@ func TestMysqlTournamentRepository_List(t *testing.T) {
 
 	t.Run("empty result when no tournaments", func(t *testing.T) {
 		db := setupSuite(t)
-		repo := NewMysqlTournamentRepository(db)
+		repo := NewMysqlRepository(db)
 		ctx := context.Background()
 
 		tournaments, total, err := repo.List(ctx, TournamentFilter{}, 1, 20)
@@ -124,7 +124,7 @@ func TestMysqlTournamentRepository_List(t *testing.T) {
 
 	t.Run("filter by active true", func(t *testing.T) {
 		db := setupSuite(t)
-		repo := NewMysqlTournamentRepository(db)
+		repo := NewMysqlRepository(db)
 		ctx := context.Background()
 
 		season1 := "2024-2025"
@@ -159,7 +159,7 @@ func TestMysqlTournamentRepository_List(t *testing.T) {
 
 	t.Run("filter by active false", func(t *testing.T) {
 		db := setupSuite(t)
-		repo := NewMysqlTournamentRepository(db)
+		repo := NewMysqlRepository(db)
 		ctx := context.Background()
 
 		season1 := "2024-2025"
@@ -194,7 +194,7 @@ func TestMysqlTournamentRepository_List(t *testing.T) {
 
 	t.Run("filter by country", func(t *testing.T) {
 		db := setupSuite(t)
-		repo := NewMysqlTournamentRepository(db)
+		repo := NewMysqlRepository(db)
 		ctx := context.Background()
 
 		season1 := "2024-2025"
@@ -226,7 +226,7 @@ func TestMysqlTournamentRepository_List(t *testing.T) {
 
 	t.Run("filter by division", func(t *testing.T) {
 		db := setupSuite(t)
-		repo := NewMysqlTournamentRepository(db)
+		repo := NewMysqlRepository(db)
 		ctx := context.Background()
 
 		division1 := 1
@@ -262,7 +262,7 @@ func TestMysqlTournamentRepository_List(t *testing.T) {
 
 	t.Run("filter by season", func(t *testing.T) {
 		db := setupSuite(t)
-		repo := NewMysqlTournamentRepository(db)
+		repo := NewMysqlRepository(db)
 		ctx := context.Background()
 
 		season1 := "2024-2025"
@@ -294,7 +294,7 @@ func TestMysqlTournamentRepository_List(t *testing.T) {
 
 	t.Run("pagination works correctly", func(t *testing.T) {
 		db := setupSuite(t)
-		repo := NewMysqlTournamentRepository(db)
+		repo := NewMysqlRepository(db)
 		ctx := context.Background()
 
 		season1 := "2024-2025"
@@ -332,7 +332,7 @@ func TestMysqlTournamentRepository_List(t *testing.T) {
 
 	t.Run("out-of-bounds page returns empty slice with correct total", func(t *testing.T) {
 		db := setupSuite(t)
-		repo := NewMysqlTournamentRepository(db)
+		repo := NewMysqlRepository(db)
 		ctx := context.Background()
 
 		season := "2024-2025"
@@ -356,7 +356,7 @@ func TestMysqlTournamentRepository_List(t *testing.T) {
 func TestMysqlTournamentRepository_FindByID(t *testing.T) {
 	t.Run("success returns correct tournament", func(t *testing.T) {
 		db := setupSuite(t)
-		repo := NewMysqlTournamentRepository(db)
+		repo := NewMysqlRepository(db)
 		ctx := context.Background()
 
 		division := 1
@@ -388,7 +388,7 @@ func TestMysqlTournamentRepository_FindByID(t *testing.T) {
 
 	t.Run("not found returns ErrTournamentNotFound", func(t *testing.T) {
 		db := setupSuite(t)
-		repo := NewMysqlTournamentRepository(db)
+		repo := NewMysqlRepository(db)
 		ctx := context.Background()
 
 		found, err := repo.FindByID(ctx, 99999)
@@ -402,7 +402,7 @@ func TestMysqlTournamentRepository_FindByID(t *testing.T) {
 func TestMysqlTournamentRepository_Update(t *testing.T) {
 	t.Run("success all fields updated updated_at refreshed", func(t *testing.T) {
 		db := setupSuite(t)
-		repo := NewMysqlTournamentRepository(db)
+		repo := NewMysqlRepository(db)
 		ctx := context.Background()
 
 		division := 1
@@ -449,7 +449,7 @@ func TestMysqlTournamentRepository_Update(t *testing.T) {
 
 	t.Run("not found returns ErrTournamentNotFound", func(t *testing.T) {
 		db := setupSuite(t)
-		repo := NewMysqlTournamentRepository(db)
+		repo := NewMysqlRepository(db)
 		ctx := context.Background()
 
 		tournament := &Tournament{
@@ -469,7 +469,7 @@ func TestMysqlTournamentRepository_Update(t *testing.T) {
 func TestMysqlTournamentRepository_UpdateStatus(t *testing.T) {
 	t.Run("activate sets active=true and updates updated_at", func(t *testing.T) {
 		db := setupSuite(t)
-		repo := NewMysqlTournamentRepository(db)
+		repo := NewMysqlRepository(db)
 		ctx := context.Background()
 
 		tournament := &Tournament{
@@ -495,7 +495,7 @@ func TestMysqlTournamentRepository_UpdateStatus(t *testing.T) {
 
 	t.Run("deactivate sets active=false and updates updated_at", func(t *testing.T) {
 		db := setupSuite(t)
-		repo := NewMysqlTournamentRepository(db)
+		repo := NewMysqlRepository(db)
 		ctx := context.Background()
 
 		tournament := &Tournament{
@@ -521,7 +521,7 @@ func TestMysqlTournamentRepository_UpdateStatus(t *testing.T) {
 
 	t.Run("not found returns ErrTournamentNotFound", func(t *testing.T) {
 		db := setupSuite(t)
-		repo := NewMysqlTournamentRepository(db)
+		repo := NewMysqlRepository(db)
 		ctx := context.Background()
 
 		err := repo.UpdateStatus(ctx, 99999, true)

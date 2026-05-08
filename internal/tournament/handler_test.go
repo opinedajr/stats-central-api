@@ -17,11 +17,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type MockTournamentServiceForHandler struct {
+type MockServiceForHandler struct {
 	mock.Mock
 }
 
-func (m *MockTournamentServiceForHandler) CreateTournament(ctx context.Context, input CreateTournamentInput) (*TournamentOutput, error) {
+func (m *MockServiceForHandler) CreateTournament(ctx context.Context, input CreateTournamentInput) (*TournamentOutput, error) {
 	args := m.Called(ctx, input)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -29,7 +29,7 @@ func (m *MockTournamentServiceForHandler) CreateTournament(ctx context.Context, 
 	return args.Get(0).(*TournamentOutput), args.Error(1)
 }
 
-func (m *MockTournamentServiceForHandler) ListTournaments(ctx context.Context, filter TournamentFilter, page int, pageSize int) ([]*TournamentOutput, int64, error) {
+func (m *MockServiceForHandler) ListTournaments(ctx context.Context, filter TournamentFilter, page int, pageSize int) ([]*TournamentOutput, int64, error) {
 	args := m.Called(ctx, filter, page, pageSize)
 	if args.Get(0) == nil {
 		return nil, args.Get(1).(int64), args.Error(2)
@@ -37,7 +37,7 @@ func (m *MockTournamentServiceForHandler) ListTournaments(ctx context.Context, f
 	return args.Get(0).([]*TournamentOutput), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockTournamentServiceForHandler) GetTournamentByID(ctx context.Context, id uint) (*TournamentOutput, error) {
+func (m *MockServiceForHandler) GetTournamentByID(ctx context.Context, id uint) (*TournamentOutput, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -45,7 +45,7 @@ func (m *MockTournamentServiceForHandler) GetTournamentByID(ctx context.Context,
 	return args.Get(0).(*TournamentOutput), args.Error(1)
 }
 
-func (m *MockTournamentServiceForHandler) UpdateTournament(ctx context.Context, id uint, input UpdateTournamentInput) (*TournamentOutput, error) {
+func (m *MockServiceForHandler) UpdateTournament(ctx context.Context, id uint, input UpdateTournamentInput) (*TournamentOutput, error) {
 	args := m.Called(ctx, id, input)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -53,7 +53,7 @@ func (m *MockTournamentServiceForHandler) UpdateTournament(ctx context.Context, 
 	return args.Get(0).(*TournamentOutput), args.Error(1)
 }
 
-func (m *MockTournamentServiceForHandler) UpdateTournamentStatus(ctx context.Context, id uint, active bool) (*TournamentOutput, error) {
+func (m *MockServiceForHandler) UpdateTournamentStatus(ctx context.Context, id uint, active bool) (*TournamentOutput, error) {
 	args := m.Called(ctx, id, active)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -78,9 +78,9 @@ func TestCreateTournamentHandler(t *testing.T) {
 		name           string
 		requestBody    any
 		expectedStatus int
-		setupMock      func(*MockTournamentServiceForHandler)
+		setupMock      func(*MockServiceForHandler)
 		assertResponse func(*testing.T, []byte)
-		assertMock     func(*testing.T, *MockTournamentServiceForHandler)
+		assertMock     func(*testing.T, *MockServiceForHandler)
 	}{
 		{
 			name: "success",
@@ -92,7 +92,7 @@ func TestCreateTournamentHandler(t *testing.T) {
 				Active:   &active,
 			},
 			expectedStatus: http.StatusCreated,
-			setupMock: func(m *MockTournamentServiceForHandler) {
+			setupMock: func(m *MockServiceForHandler) {
 				expectedOutput := &TournamentOutput{
 					ID:        1,
 					Name:      "Premier League",
@@ -124,7 +124,7 @@ func TestCreateTournamentHandler(t *testing.T) {
 				assert.Equal(t, "Premier League", response.Data.Name)
 				assert.Equal(t, "England", response.Data.Country)
 			},
-			assertMock: func(t *testing.T, m *MockTournamentServiceForHandler) {
+			assertMock: func(t *testing.T, m *MockServiceForHandler) {
 				m.AssertExpectations(t)
 			},
 		},
@@ -132,7 +132,7 @@ func TestCreateTournamentHandler(t *testing.T) {
 			name:           "validation error - invalid request body",
 			requestBody:    []byte("{invalid json"),
 			expectedStatus: http.StatusBadRequest,
-			setupMock:      func(m *MockTournamentServiceForHandler) {},
+			setupMock:      func(m *MockServiceForHandler) {},
 			assertResponse: func(t *testing.T, body []byte) {
 				var response api.Response[struct{}]
 				err := json.Unmarshal(body, &response)
@@ -140,7 +140,7 @@ func TestCreateTournamentHandler(t *testing.T) {
 				assert.NotNil(t, response.Error)
 				assert.Equal(t, "VALIDATION_ERROR", response.Error.Code)
 			},
-			assertMock: func(t *testing.T, m *MockTournamentServiceForHandler) {
+			assertMock: func(t *testing.T, m *MockServiceForHandler) {
 				m.AssertNotCalled(t, "CreateTournament")
 			},
 		},
@@ -151,7 +151,7 @@ func TestCreateTournamentHandler(t *testing.T) {
 				Country: "England",
 			},
 			expectedStatus: http.StatusInternalServerError,
-			setupMock: func(m *MockTournamentServiceForHandler) {
+			setupMock: func(m *MockServiceForHandler) {
 				m.On("CreateTournament", mock.Anything, mock.AnythingOfType("tournament.CreateTournamentInput")).Return(nil, ErrDatabaseError).Once()
 			},
 			assertResponse: func(t *testing.T, body []byte) {
@@ -161,7 +161,7 @@ func TestCreateTournamentHandler(t *testing.T) {
 				assert.NotNil(t, response.Error)
 				assert.Equal(t, "DATABASE_ERROR", response.Error.Code)
 			},
-			assertMock: func(t *testing.T, m *MockTournamentServiceForHandler) {
+			assertMock: func(t *testing.T, m *MockServiceForHandler) {
 				m.AssertExpectations(t)
 			},
 		},
@@ -169,7 +169,7 @@ func TestCreateTournamentHandler(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockService := new(MockTournamentServiceForHandler)
+			mockService := new(MockServiceForHandler)
 			logger := logger.NewLogger("error")
 			handler := NewTournamentHandler(mockService, logger)
 
@@ -211,15 +211,15 @@ func TestListTournamentsHandler(t *testing.T) {
 		name           string
 		queryString    string
 		expectedStatus int
-		setupMock      func(*MockTournamentServiceForHandler)
+		setupMock      func(*MockServiceForHandler)
 		assertResponse func(*testing.T, []byte)
-		assertMock     func(*testing.T, *MockTournamentServiceForHandler)
+		assertMock     func(*testing.T, *MockServiceForHandler)
 	}{
 		{
 			name:           "success",
 			queryString:    "?page=1&page_size=20",
 			expectedStatus: http.StatusOK,
-			setupMock: func(m *MockTournamentServiceForHandler) {
+			setupMock: func(m *MockServiceForHandler) {
 				expectedOutputs := []*TournamentOutput{
 					{
 						ID:       2,
@@ -255,7 +255,7 @@ func TestListTournamentsHandler(t *testing.T) {
 				assert.Equal(t, 20, response.Meta.PageSize)
 				assert.Equal(t, 1, response.Meta.TotalPages)
 			},
-			assertMock: func(t *testing.T, m *MockTournamentServiceForHandler) {
+			assertMock: func(t *testing.T, m *MockServiceForHandler) {
 				m.AssertExpectations(t)
 			},
 		},
@@ -263,7 +263,7 @@ func TestListTournamentsHandler(t *testing.T) {
 			name:           "success with filters",
 			queryString:    "?active=true&country=England&division=1&season=2024-2025",
 			expectedStatus: http.StatusOK,
-			setupMock: func(m *MockTournamentServiceForHandler) {
+			setupMock: func(m *MockServiceForHandler) {
 				country := "England"
 				expectedOutputs := []*TournamentOutput{
 					{
@@ -290,7 +290,7 @@ func TestListTournamentsHandler(t *testing.T) {
 				assert.Nil(t, response.Error)
 				assert.Len(t, response.Data, 1)
 			},
-			assertMock: func(t *testing.T, m *MockTournamentServiceForHandler) {
+			assertMock: func(t *testing.T, m *MockServiceForHandler) {
 				m.AssertExpectations(t)
 			},
 		},
@@ -298,7 +298,7 @@ func TestListTournamentsHandler(t *testing.T) {
 			name:           "empty list",
 			queryString:    "",
 			expectedStatus: http.StatusOK,
-			setupMock: func(m *MockTournamentServiceForHandler) {
+			setupMock: func(m *MockServiceForHandler) {
 				m.On("ListTournaments", mock.Anything, TournamentFilter{}, 1, 20).Return([]*TournamentOutput{}, int64(0), nil).Once()
 			},
 			assertResponse: func(t *testing.T, body []byte) {
@@ -310,7 +310,7 @@ func TestListTournamentsHandler(t *testing.T) {
 				assert.Equal(t, int64(0), response.Meta.Total)
 				assert.Equal(t, 1, response.Meta.TotalPages)
 			},
-			assertMock: func(t *testing.T, m *MockTournamentServiceForHandler) {
+			assertMock: func(t *testing.T, m *MockServiceForHandler) {
 				m.AssertExpectations(t)
 			},
 		},
@@ -318,7 +318,7 @@ func TestListTournamentsHandler(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockService := new(MockTournamentServiceForHandler)
+			mockService := new(MockServiceForHandler)
 			logger := logger.NewLogger("error")
 			handler := NewTournamentHandler(mockService, logger)
 
@@ -346,15 +346,15 @@ func TestGetTournamentHandler(t *testing.T) {
 		name           string
 		tournamentID   string
 		expectedStatus int
-		setupMock      func(*MockTournamentServiceForHandler)
+		setupMock      func(*MockServiceForHandler)
 		assertResponse func(*testing.T, []byte)
-		assertMock     func(*testing.T, *MockTournamentServiceForHandler)
+		assertMock     func(*testing.T, *MockServiceForHandler)
 	}{
 		{
 			name:           "success",
 			tournamentID:   "123",
 			expectedStatus: http.StatusOK,
-			setupMock: func(m *MockTournamentServiceForHandler) {
+			setupMock: func(m *MockServiceForHandler) {
 				expectedOutput := &TournamentOutput{
 					ID:       123,
 					Name:     "Premier League",
@@ -374,7 +374,7 @@ func TestGetTournamentHandler(t *testing.T) {
 				assert.Equal(t, uint(123), response.Data.ID)
 				assert.Equal(t, "Premier League", response.Data.Name)
 			},
-			assertMock: func(t *testing.T, m *MockTournamentServiceForHandler) {
+			assertMock: func(t *testing.T, m *MockServiceForHandler) {
 				m.AssertExpectations(t)
 			},
 		},
@@ -382,7 +382,7 @@ func TestGetTournamentHandler(t *testing.T) {
 			name:           "invalid id",
 			tournamentID:   "invalid",
 			expectedStatus: http.StatusBadRequest,
-			setupMock:      func(m *MockTournamentServiceForHandler) {},
+			setupMock:      func(m *MockServiceForHandler) {},
 			assertResponse: func(t *testing.T, body []byte) {
 				var response api.Response[struct{}]
 				err := json.Unmarshal(body, &response)
@@ -390,7 +390,7 @@ func TestGetTournamentHandler(t *testing.T) {
 				assert.NotNil(t, response.Error)
 				assert.Equal(t, "INVALID_ID", response.Error.Code)
 			},
-			assertMock: func(t *testing.T, m *MockTournamentServiceForHandler) {
+			assertMock: func(t *testing.T, m *MockServiceForHandler) {
 				m.AssertNotCalled(t, "GetTournamentByID")
 			},
 		},
@@ -398,7 +398,7 @@ func TestGetTournamentHandler(t *testing.T) {
 			name:           "tournament not found",
 			tournamentID:   "99999",
 			expectedStatus: http.StatusNotFound,
-			setupMock: func(m *MockTournamentServiceForHandler) {
+			setupMock: func(m *MockServiceForHandler) {
 				m.On("GetTournamentByID", mock.Anything, uint(99999)).Return(nil, ErrTournamentNotFound).Once()
 			},
 			assertResponse: func(t *testing.T, body []byte) {
@@ -408,7 +408,7 @@ func TestGetTournamentHandler(t *testing.T) {
 				assert.NotNil(t, response.Error)
 				assert.Equal(t, "TOURNAMENT_NOT_FOUND", response.Error.Code)
 			},
-			assertMock: func(t *testing.T, m *MockTournamentServiceForHandler) {
+			assertMock: func(t *testing.T, m *MockServiceForHandler) {
 				m.AssertExpectations(t)
 			},
 		},
@@ -416,7 +416,7 @@ func TestGetTournamentHandler(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockService := new(MockTournamentServiceForHandler)
+			mockService := new(MockServiceForHandler)
 			logger := logger.NewLogger("error")
 			handler := NewTournamentHandler(mockService, logger)
 
@@ -445,9 +445,9 @@ func TestUpdateTournamentHandler(t *testing.T) {
 		tournamentID   string
 		requestBody    UpdateTournamentInput
 		expectedStatus int
-		setupMock      func(*MockTournamentServiceForHandler)
+		setupMock      func(*MockServiceForHandler)
 		assertResponse func(*testing.T, []byte)
-		assertMock     func(*testing.T, *MockTournamentServiceForHandler)
+		assertMock     func(*testing.T, *MockServiceForHandler)
 	}{
 		{
 			name:         "success",
@@ -459,7 +459,7 @@ func TestUpdateTournamentHandler(t *testing.T) {
 				Season:   &season,
 			},
 			expectedStatus: http.StatusOK,
-			setupMock: func(m *MockTournamentServiceForHandler) {
+			setupMock: func(m *MockServiceForHandler) {
 				expectedOutput := &TournamentOutput{
 					ID:       123,
 					Name:     "Updated Premier League",
@@ -485,7 +485,7 @@ func TestUpdateTournamentHandler(t *testing.T) {
 				assert.NotNil(t, response.Data)
 				assert.Equal(t, "Updated Premier League", response.Data.Name)
 			},
-			assertMock: func(t *testing.T, m *MockTournamentServiceForHandler) {
+			assertMock: func(t *testing.T, m *MockServiceForHandler) {
 				m.AssertExpectations(t)
 			},
 		},
@@ -497,7 +497,7 @@ func TestUpdateTournamentHandler(t *testing.T) {
 				Country: "England",
 			},
 			expectedStatus: http.StatusBadRequest,
-			setupMock:      func(m *MockTournamentServiceForHandler) {},
+			setupMock:      func(m *MockServiceForHandler) {},
 			assertResponse: func(t *testing.T, body []byte) {
 				var response api.Response[struct{}]
 				err := json.Unmarshal(body, &response)
@@ -505,7 +505,7 @@ func TestUpdateTournamentHandler(t *testing.T) {
 				assert.NotNil(t, response.Error)
 				assert.Equal(t, "INVALID_ID", response.Error.Code)
 			},
-			assertMock: func(t *testing.T, m *MockTournamentServiceForHandler) {
+			assertMock: func(t *testing.T, m *MockServiceForHandler) {
 				m.AssertNotCalled(t, "UpdateTournament")
 			},
 		},
@@ -517,7 +517,7 @@ func TestUpdateTournamentHandler(t *testing.T) {
 				Country: "England",
 			},
 			expectedStatus: http.StatusNotFound,
-			setupMock: func(m *MockTournamentServiceForHandler) {
+			setupMock: func(m *MockServiceForHandler) {
 				m.On("UpdateTournament", mock.Anything, uint(99999), mock.AnythingOfType("tournament.UpdateTournamentInput")).Return(nil, ErrTournamentNotFound).Once()
 			},
 			assertResponse: func(t *testing.T, body []byte) {
@@ -527,7 +527,7 @@ func TestUpdateTournamentHandler(t *testing.T) {
 				assert.NotNil(t, response.Error)
 				assert.Equal(t, "TOURNAMENT_NOT_FOUND", response.Error.Code)
 			},
-			assertMock: func(t *testing.T, m *MockTournamentServiceForHandler) {
+			assertMock: func(t *testing.T, m *MockServiceForHandler) {
 				m.AssertExpectations(t)
 			},
 		},
@@ -535,7 +535,7 @@ func TestUpdateTournamentHandler(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockService := new(MockTournamentServiceForHandler)
+			mockService := new(MockServiceForHandler)
 			logger := logger.NewLogger("error")
 			handler := NewTournamentHandler(mockService, logger)
 
@@ -565,16 +565,16 @@ func TestUpdateTournamentStatusHandler(t *testing.T) {
 		tournamentID   string
 		active         bool
 		expectedStatus int
-		setupMock      func(*MockTournamentServiceForHandler)
+		setupMock      func(*MockServiceForHandler)
 		assertResponse func(*testing.T, []byte)
-		assertMock     func(*testing.T, *MockTournamentServiceForHandler)
+		assertMock     func(*testing.T, *MockServiceForHandler)
 	}{
 		{
 			name:           "success activate",
 			tournamentID:   "123",
 			active:         true,
 			expectedStatus: http.StatusOK,
-			setupMock: func(m *MockTournamentServiceForHandler) {
+			setupMock: func(m *MockServiceForHandler) {
 				expectedOutput := &TournamentOutput{
 					ID:      123,
 					Name:    "Premier League",
@@ -591,7 +591,7 @@ func TestUpdateTournamentStatusHandler(t *testing.T) {
 				assert.NotNil(t, response.Data)
 				assert.True(t, response.Data.Active)
 			},
-			assertMock: func(t *testing.T, m *MockTournamentServiceForHandler) {
+			assertMock: func(t *testing.T, m *MockServiceForHandler) {
 				m.AssertExpectations(t)
 			},
 		},
@@ -600,7 +600,7 @@ func TestUpdateTournamentStatusHandler(t *testing.T) {
 			tournamentID:   "123",
 			active:         false,
 			expectedStatus: http.StatusOK,
-			setupMock: func(m *MockTournamentServiceForHandler) {
+			setupMock: func(m *MockServiceForHandler) {
 				expectedOutput := &TournamentOutput{
 					ID:      123,
 					Name:    "Premier League",
@@ -617,7 +617,7 @@ func TestUpdateTournamentStatusHandler(t *testing.T) {
 				assert.NotNil(t, response.Data)
 				assert.False(t, response.Data.Active)
 			},
-			assertMock: func(t *testing.T, m *MockTournamentServiceForHandler) {
+			assertMock: func(t *testing.T, m *MockServiceForHandler) {
 				m.AssertExpectations(t)
 			},
 		},
@@ -626,7 +626,7 @@ func TestUpdateTournamentStatusHandler(t *testing.T) {
 			tournamentID:   "invalid",
 			active:         true,
 			expectedStatus: http.StatusBadRequest,
-			setupMock:      func(m *MockTournamentServiceForHandler) {},
+			setupMock:      func(m *MockServiceForHandler) {},
 			assertResponse: func(t *testing.T, body []byte) {
 				var response api.Response[struct{}]
 				err := json.Unmarshal(body, &response)
@@ -634,7 +634,7 @@ func TestUpdateTournamentStatusHandler(t *testing.T) {
 				assert.NotNil(t, response.Error)
 				assert.Equal(t, "INVALID_ID", response.Error.Code)
 			},
-			assertMock: func(t *testing.T, m *MockTournamentServiceForHandler) {
+			assertMock: func(t *testing.T, m *MockServiceForHandler) {
 				m.AssertNotCalled(t, "UpdateTournamentStatus")
 			},
 		},
@@ -643,7 +643,7 @@ func TestUpdateTournamentStatusHandler(t *testing.T) {
 			tournamentID:   "99999",
 			active:         true,
 			expectedStatus: http.StatusNotFound,
-			setupMock: func(m *MockTournamentServiceForHandler) {
+			setupMock: func(m *MockServiceForHandler) {
 				m.On("UpdateTournamentStatus", mock.Anything, uint(99999), true).Return(nil, ErrTournamentNotFound).Once()
 			},
 			assertResponse: func(t *testing.T, body []byte) {
@@ -653,7 +653,7 @@ func TestUpdateTournamentStatusHandler(t *testing.T) {
 				assert.NotNil(t, response.Error)
 				assert.Equal(t, "TOURNAMENT_NOT_FOUND", response.Error.Code)
 			},
-			assertMock: func(t *testing.T, m *MockTournamentServiceForHandler) {
+			assertMock: func(t *testing.T, m *MockServiceForHandler) {
 				m.AssertExpectations(t)
 			},
 		},
@@ -661,7 +661,7 @@ func TestUpdateTournamentStatusHandler(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockService := new(MockTournamentServiceForHandler)
+			mockService := new(MockServiceForHandler)
 			logger := logger.NewLogger("error")
 			handler := NewTournamentHandler(mockService, logger)
 

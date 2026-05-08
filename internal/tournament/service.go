@@ -6,7 +6,7 @@ import (
 	"github.com/opinedajr/stats-central-api/internal/shared/logger"
 )
 
-type TournamentService interface {
+type Service interface {
 	CreateTournament(ctx context.Context, input CreateTournamentInput) (*TournamentOutput, error)
 	ListTournaments(ctx context.Context, filter TournamentFilter, page int, pageSize int) ([]*TournamentOutput, int64, error)
 	GetTournamentByID(ctx context.Context, id uint) (*TournamentOutput, error)
@@ -14,19 +14,19 @@ type TournamentService interface {
 	UpdateTournamentStatus(ctx context.Context, id uint, active bool) (*TournamentOutput, error)
 }
 
-type tournamentService struct {
-	repo   TournamentRepository
+type service struct {
+	repo   Repository
 	logger logger.Logger
 }
 
-func NewTournamentService(repo TournamentRepository, logger logger.Logger) TournamentService {
-	return &tournamentService{
+func NewService(repo Repository, logger logger.Logger) Service {
+	return &service{
 		repo:   repo,
 		logger: logger,
 	}
 }
 
-func (s *tournamentService) CreateTournament(ctx context.Context, input CreateTournamentInput) (*TournamentOutput, error) {
+func (s *service) CreateTournament(ctx context.Context, input CreateTournamentInput) (*TournamentOutput, error) {
 	active := true
 	if input.Active != nil {
 		active = *input.Active
@@ -51,7 +51,7 @@ func (s *tournamentService) CreateTournament(ctx context.Context, input CreateTo
 	return toTournamentOutput(tournament), nil
 }
 
-func (s *tournamentService) ListTournaments(ctx context.Context, filter TournamentFilter, page int, pageSize int) ([]*TournamentOutput, int64, error) {
+func (s *service) ListTournaments(ctx context.Context, filter TournamentFilter, page int, pageSize int) ([]*TournamentOutput, int64, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -78,7 +78,7 @@ func (s *tournamentService) ListTournaments(ctx context.Context, filter Tourname
 	return outputs, total, nil
 }
 
-func (s *tournamentService) GetTournamentByID(ctx context.Context, id uint) (*TournamentOutput, error) {
+func (s *service) GetTournamentByID(ctx context.Context, id uint) (*TournamentOutput, error) {
 	tournament, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		s.logger.Error(ctx, "tournament not found", "error", err, "tournament_id", id)
@@ -88,7 +88,7 @@ func (s *tournamentService) GetTournamentByID(ctx context.Context, id uint) (*To
 	return toTournamentOutput(tournament), nil
 }
 
-func (s *tournamentService) UpdateTournament(ctx context.Context, id uint, input UpdateTournamentInput) (*TournamentOutput, error) {
+func (s *service) UpdateTournament(ctx context.Context, id uint, input UpdateTournamentInput) (*TournamentOutput, error) {
 	_, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		s.logger.Error(ctx, "tournament not found", "error", err, "tournament_id", id)
@@ -120,7 +120,7 @@ func (s *tournamentService) UpdateTournament(ctx context.Context, id uint, input
 	return toTournamentOutput(updated), nil
 }
 
-func (s *tournamentService) UpdateTournamentStatus(ctx context.Context, id uint, active bool) (*TournamentOutput, error) {
+func (s *service) UpdateTournamentStatus(ctx context.Context, id uint, active bool) (*TournamentOutput, error) {
 	if err := s.repo.UpdateStatus(ctx, id, active); err != nil {
 		s.logger.Error(ctx, "failed to update tournament status", "error", err, "tournament_id", id, "active", active)
 		return nil, err

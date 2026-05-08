@@ -13,11 +13,11 @@ import (
 var errInvalidID = errors.New("invalid id")
 
 type TournamentHandler struct {
-	service TournamentService
+	service Service
 	logger  logger.Logger
 }
 
-func NewTournamentHandler(service TournamentService, logger logger.Logger) *TournamentHandler {
+func NewTournamentHandler(service Service, logger logger.Logger) *TournamentHandler {
 	return &TournamentHandler{
 		service: service,
 		logger:  logger,
