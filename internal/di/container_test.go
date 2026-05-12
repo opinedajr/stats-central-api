@@ -194,6 +194,72 @@ func TestContainer_HealthCheckHandler(t *testing.T) {
 	})
 }
 
+func TestContainer_TournamentRepository(t *testing.T) {
+	t.Run("success - creates tournament repository", func(t *testing.T) {
+		setRequiredEnvVars(t)
+		t.Setenv("DB_DRIVER", "mysql")
+
+		container := NewContainer()
+
+		assert.Panics(t, func() {
+			container.TournamentRepository()
+		}, "TournamentRepository should panic when database is not available")
+	})
+
+	t.Run("success - returns same repository instance (singleton)", func(t *testing.T) {
+		setRequiredEnvVars(t)
+		t.Setenv("DB_DRIVER", "mysql")
+
+		container := NewContainer()
+
+		assert.NotNil(t, container.repositories, "RepositoryDependencies should be initialized")
+	})
+}
+
+func TestContainer_TournamentService(t *testing.T) {
+	t.Run("success - creates tournament service", func(t *testing.T) {
+		setRequiredEnvVars(t)
+		t.Setenv("DB_DRIVER", "mysql")
+
+		container := NewContainer()
+
+		assert.Panics(t, func() {
+			container.TournamentService()
+		}, "TournamentService should panic when database is not available")
+	})
+
+	t.Run("success - returns same service instance (singleton)", func(t *testing.T) {
+		setRequiredEnvVars(t)
+		t.Setenv("DB_DRIVER", "mysql")
+
+		container := NewContainer()
+
+		assert.NotNil(t, container.services, "ServiceDependencies should be initialized")
+	})
+}
+
+func TestContainer_TournamentHandler(t *testing.T) {
+	t.Run("success - creates tournament handler", func(t *testing.T) {
+		setRequiredEnvVars(t)
+		t.Setenv("DB_DRIVER", "mysql")
+
+		container := NewContainer()
+
+		assert.Panics(t, func() {
+			container.TournamentHandler()
+		}, "TournamentHandler should panic when database is not available")
+	})
+
+	t.Run("success - returns same handler instance (singleton)", func(t *testing.T) {
+		setRequiredEnvVars(t)
+		t.Setenv("DB_DRIVER", "mysql")
+
+		container := NewContainer()
+
+		assert.NotNil(t, container.handlers, "HandlerDependencies should be initialized")
+	})
+}
+
 func TestContainer_DependencyOrder(t *testing.T) {
 	t.Run("success - logger depends on config", func(t *testing.T) {
 		setRequiredEnvVars(t)
