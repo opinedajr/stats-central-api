@@ -8,6 +8,7 @@ import (
 	"github.com/opinedajr/stats-central-api/internal/infrastructure/database"
 	"github.com/opinedajr/stats-central-api/internal/shared/config"
 	sloglogger "github.com/opinedajr/stats-central-api/internal/shared/logger"
+	"github.com/opinedajr/stats-central-api/internal/teams"
 	"github.com/opinedajr/stats-central-api/internal/tournament"
 	"gorm.io/gorm"
 )
@@ -24,16 +25,19 @@ type Container struct {
 
 type RepositoryDependencies struct {
 	tournamentRepository tournament.Repository
+	teamsRepository       teams.Repository
 }
 
 type HandlerDependencies struct {
 	healthcheckHandler *healthcheck.Handler
 	tournamentHandler  *tournament.TournamentHandler
+	teamsHandler       *teams.TeamHandler
 }
 
 type ServiceDependencies struct {
 	healthcheckService *healthcheck.Service
 	tournamentService  tournament.Service
+	teamsService       teams.Service
 }
 
 func NewContainer() *Container {
@@ -122,4 +126,25 @@ func (c *Container) TournamentHandler() *tournament.TournamentHandler {
 		c.handlers.tournamentHandler = tournament.NewTournamentHandler(c.TournamentService(), c.Logger())
 	}
 	return c.handlers.tournamentHandler
+}
+
+func (c *Container) TeamsRepository() teams.Repository {
+	if c.repositories.teamsRepository == nil {
+		c.repositories.teamsRepository = teams.NewMysqlRepository(c.DB())
+	}
+	return c.repositories.teamsRepository
+}
+
+func (c *Container) TeamsService() teams.Service {
+	if c.services.teamsService == nil {
+		c.services.teamsService = teams.NewService(c.TeamsRepository(), c.Logger())
+	}
+	return c.services.teamsService
+}
+
+func (c *Container) TeamsHandler() *teams.TeamHandler {
+	if c.handlers.teamsHandler == nil {
+		c.handlers.teamsHandler = teams.NewTeamHandler(c.TeamsService(), c.Logger())
+	}
+	return c.handlers.teamsHandler
 }
