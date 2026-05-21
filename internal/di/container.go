@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/opinedajr/stats-central-api/internal/analyse"
 	"github.com/opinedajr/stats-central-api/internal/healthcheck"
 	"github.com/opinedajr/stats-central-api/internal/infrastructure/database"
+	"github.com/opinedajr/stats-central-api/internal/match"
 	"github.com/opinedajr/stats-central-api/internal/shared/config"
 	sloglogger "github.com/opinedajr/stats-central-api/internal/shared/logger"
 	"github.com/opinedajr/stats-central-api/internal/teams"
@@ -26,18 +28,22 @@ type Container struct {
 type RepositoryDependencies struct {
 	tournamentRepository tournament.Repository
 	teamsRepository       teams.Repository
+	matchRepository       match.MatchRepository
+	statsRepository       analyse.StatsRepository
 }
 
 type HandlerDependencies struct {
 	healthcheckHandler *healthcheck.Handler
 	tournamentHandler  *tournament.TournamentHandler
 	teamsHandler       *teams.TeamHandler
+	analyseHandler     *analyse.AnalyseHandler
 }
 
 type ServiceDependencies struct {
 	healthcheckService *healthcheck.Service
 	tournamentService  tournament.Service
 	teamsService       teams.Service
+	analyseService     analyse.Service
 }
 
 func NewContainer() *Container {
@@ -147,4 +153,32 @@ func (c *Container) TeamsHandler() *teams.TeamHandler {
 		c.handlers.teamsHandler = teams.NewTeamHandler(c.TeamsService(), c.Logger())
 	}
 	return c.handlers.teamsHandler
+}
+
+func (c *Container) MatchRepository() match.MatchRepository {
+	if c.repositories.matchRepository == nil {
+		c.repositories.matchRepository = match.NewMysqlRepository(c.DB())
+	}
+	return c.repositories.matchRepository
+}
+
+func (c *Container) StatsRepository() analyse.StatsRepository {
+	if c.repositories.statsRepository == nil {
+		c.repositories.statsRepository = analyse.NewMysqlStatsRepository(c.DB())
+	}
+	return c.repositories.statsRepository
+}
+
+func (c *Container) AnalyseService() analyse.Service {
+	if c.services.analyseService == nil {
+		c.services.analyseService = analyse.NewAnalyseService(c.StatsRepository(), c.MatchRepository())
+	}
+	return c.services.analyseService
+}
+
+func (c *Container) AnalyseHandler() *analyse.AnalyseHandler {
+	if c.handlers.analyseHandler == nil {
+		c.handlers.analyseHandler = analyse.NewAnalyseHandler(c.AnalyseService(), c.Logger())
+	}
+	return c.handlers.analyseHandler
 }
