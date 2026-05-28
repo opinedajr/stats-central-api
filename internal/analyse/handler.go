@@ -39,7 +39,7 @@ func (h *AnalyseHandler) TeamTournamentAnalysis(c *gin.Context) {
 		return
 	}
 
-	lastN, _ := strconv.Atoi(c.DefaultQuery("last_n", "10"))
+	lastN, _ := strconv.Atoi(c.DefaultQuery("last_n", strconv.Itoa(defaultLastN)))
 
 	output, err := h.service.TeamTournamentAnalysis(c.Request.Context(), uint(teamID), uint(tournamentID), lastN)
 	if err != nil {
