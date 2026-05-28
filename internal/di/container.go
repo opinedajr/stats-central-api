@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"gorm.io/gorm"
+
 	"github.com/opinedajr/stats-central-api/internal/analyse"
 	"github.com/opinedajr/stats-central-api/internal/healthcheck"
 	"github.com/opinedajr/stats-central-api/internal/infrastructure/database"
@@ -12,7 +14,6 @@ import (
 	sloglogger "github.com/opinedajr/stats-central-api/internal/shared/logger"
 	"github.com/opinedajr/stats-central-api/internal/teams"
 	"github.com/opinedajr/stats-central-api/internal/tournament"
-	"gorm.io/gorm"
 )
 
 type Container struct {
@@ -28,7 +29,7 @@ type Container struct {
 type RepositoryDependencies struct {
 	tournamentRepository tournament.Repository
 	teamsRepository       teams.Repository
-	matchRepository       match.MatchRepository
+	matchRepository       match.Repository
 	statsRepository       analyse.StatsRepository
 }
 
@@ -155,7 +156,7 @@ func (c *Container) TeamsHandler() *teams.TeamHandler {
 	return c.handlers.teamsHandler
 }
 
-func (c *Container) MatchRepository() match.MatchRepository {
+func (c *Container) MatchRepository() match.Repository {
 	if c.repositories.matchRepository == nil {
 		c.repositories.matchRepository = match.NewMysqlRepository(c.DB())
 	}
