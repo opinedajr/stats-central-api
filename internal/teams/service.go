@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/opinedajr/stats-central-api/internal/shared/logger"
+	"github.com/opinedajr/stats-central-api/internal/shared/pagination"
 )
 
 type Service interface {
@@ -24,17 +25,7 @@ func NewService(repo Repository, logger logger.Logger) Service {
 }
 
 func (s *service) ListTeams(ctx context.Context, filter TeamFilter, page int, pageSize int) ([]*TeamOutput, int64, error) {
-	if page < 1 {
-		page = 1
-	}
-
-	if pageSize < 1 {
-		pageSize = 20
-	}
-
-	if pageSize > 100 {
-		pageSize = 100
-	}
+	page, pageSize = pagination.Normalize(page, pageSize)
 
 	teams, total, err := s.repo.List(ctx, filter, page, pageSize)
 	if err != nil {

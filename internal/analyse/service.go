@@ -7,16 +7,21 @@ import (
 	"github.com/opinedajr/stats-central-api/internal/match"
 )
 
+const (
+	defaultLastN = 10
+	maxLastN     = 50
+)
+
 type Service interface {
 	TeamTournamentAnalysis(ctx context.Context, teamID uint, tournamentID uint, lastN int) (AnalyseOutput, error)
 }
 
 type analyseService struct {
 	statsRepo   StatsRepository
-	matchesRepo match.MatchRepository
+	matchesRepo match.Repository
 }
 
-func NewAnalyseService(statsRepo StatsRepository, matchesRepo match.MatchRepository) Service {
+func NewAnalyseService(statsRepo StatsRepository, matchesRepo match.Repository) Service {
 	return &analyseService{
 		statsRepo:   statsRepo,
 		matchesRepo: matchesRepo,
@@ -25,10 +30,10 @@ func NewAnalyseService(statsRepo StatsRepository, matchesRepo match.MatchReposit
 
 func (s *analyseService) TeamTournamentAnalysis(ctx context.Context, teamID uint, tournamentID uint, lastN int) (AnalyseOutput, error) {
 	if lastN <= 0 {
-		lastN = 10
+		lastN = defaultLastN
 	}
-	if lastN > 50 {
-		lastN = 50
+	if lastN > maxLastN {
+		lastN = maxLastN
 	}
 
 	preCalcStats, err := s.statsRepo.GetTeamStats(ctx, teamID, tournamentID)
@@ -140,7 +145,10 @@ func buildRecentForm(matches []*match.MatchEntity, targetTeamID uint, limit int)
 			}
 		}
 
-		date := time.Unix(*m.DateTimestamp, 0)
+		var date time.Time
+		if m.DateTimestamp != nil {
+			date = time.Unix(*m.DateTimestamp, 0)
+		}
 
 		entries = append(entries, FormEntry{
 			MatchID:      m.ID,
