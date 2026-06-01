@@ -9,18 +9,18 @@ type AnalyseInput struct {
 }
 
 type AnalyseOutput struct {
-	TeamID       uint        `json:"team_id"`
-	TournamentID uint        `json:"tournament_id"`
-	HomeStats    VenueStats  `json:"home_stats"`
-	AwayStats    VenueStats  `json:"away_stats"`
-	OverallStats VenueStats  `json:"overall_stats"`
-	RecentForm           []FormEntry  `json:"recent_form"`
-	RecentFormSummary    FormSummary  `json:"recent_form_summary"`
-	RecentFormHome       []FormEntry  `json:"recent_form_home"`
-	RecentFormHomeSummary FormSummary  `json:"recent_form_home_summary"`
-	RecentFormAway       []FormEntry  `json:"recent_form_away"`
-	RecentFormAwaySummary FormSummary  `json:"recent_form_away_summary"`
-	CalculatedAt  time.Time   `json:"calculated_at"`
+	TeamID       uint          `json:"team_id"`
+	TournamentID uint          `json:"tournament_id"`
+	Home         VenueContext  `json:"home"`
+	Away         VenueContext  `json:"away"`
+	Overall      VenueContext  `json:"overall"`
+	CalculatedAt time.Time     `json:"calculated_at"`
+}
+
+type VenueContext struct {
+	Stats              VenueStats   `json:"stats"`
+	RecentForm         []FormEntry  `json:"recent_form"`
+	RecentFormSummary  FormSummary  `json:"recent_form_summary"`
 }
 
 type VenueStats struct {

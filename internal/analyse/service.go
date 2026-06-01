@@ -71,16 +71,22 @@ func (s *analyseService) TeamTournamentAnalysis(ctx context.Context, teamID uint
 	return AnalyseOutput{
 		TeamID:       teamID,
 		TournamentID: tournamentID,
-		HomeStats:    mapVenueStats(homeStats, preCalcStats, "home"),
-		AwayStats:    mapVenueStats(awayStats, preCalcStats, "away"),
-		OverallStats: mapVenueStats(overallStats, preCalcStats, "overall"),
-		RecentForm:           recentOverall,
-		RecentFormSummary:    summarizeForm(recentOverall),
-		RecentFormHome:       recentHome,
-		RecentFormHomeSummary: summarizeForm(recentHome),
-		RecentFormAway:       recentAway,
-		RecentFormAwaySummary: summarizeForm(recentAway),
-		CalculatedAt:  time.Now(),
+		Home: VenueContext{
+			Stats:             mapVenueStats(homeStats, preCalcStats, "home"),
+			RecentForm:        recentHome,
+			RecentFormSummary: summarizeForm(recentHome),
+		},
+		Away: VenueContext{
+			Stats:             mapVenueStats(awayStats, preCalcStats, "away"),
+			RecentForm:        recentAway,
+			RecentFormSummary: summarizeForm(recentAway),
+		},
+		Overall: VenueContext{
+			Stats:             mapVenueStats(overallStats, preCalcStats, "overall"),
+			RecentForm:        recentOverall,
+			RecentFormSummary: summarizeForm(recentOverall),
+		},
+		CalculatedAt: time.Now(),
 	}, nil
 }
 

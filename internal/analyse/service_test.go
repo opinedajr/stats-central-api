@@ -100,10 +100,10 @@ func TestAnalyseService_TeamTournamentAnalysis(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, uint(100), result.TeamID)
 		assert.Equal(t, uint(1), result.TournamentID)
-		assert.Equal(t, 1, result.HomeStats.MatchesPlayed)
-		assert.Equal(t, 1, result.HomeStats.Wins)
-		assert.InDelta(t, 2.5, *result.HomeStats.AvgGoalsScored, 0.01)
-		assert.Len(t, result.RecentForm, 1)
+		assert.Equal(t, 1, result.Home.Stats.MatchesPlayed)
+		assert.Equal(t, 1, result.Home.Stats.Wins)
+		assert.InDelta(t, 2.5, *result.Home.Stats.AvgGoalsScored, 0.01)
+		assert.Len(t, result.Overall.RecentForm, 1)
 	})
 
 	t.Run("returns ErrStatsNotFound when stats not found", func(t *testing.T) {
@@ -177,9 +177,9 @@ func TestAnalyseService_TeamTournamentAnalysis(t *testing.T) {
 		result, err := service.TeamTournamentAnalysis(ctx, 100, 1, 10)
 
 		require.NoError(t, err)
-		assert.Equal(t, 0.0, result.HomeStats.WinRate)
-		assert.Equal(t, 0.0, result.AwayStats.WinRate)
-		assert.Equal(t, 0.0, result.OverallStats.WinRate)
+		assert.Equal(t, 0.0, result.Home.Stats.WinRate)
+		assert.Equal(t, 0.0, result.Away.Stats.WinRate)
+		assert.Equal(t, 0.0, result.Overall.Stats.WinRate)
 	})
 
 	t.Run("handles no matches case", func(t *testing.T) {
@@ -205,10 +205,10 @@ func TestAnalyseService_TeamTournamentAnalysis(t *testing.T) {
 		result, err := service.TeamTournamentAnalysis(ctx, 100, 1, 10)
 
 		require.NoError(t, err)
-		assert.Empty(t, result.RecentForm)
-		assert.Empty(t, result.RecentFormHome)
-		assert.Empty(t, result.RecentFormAway)
-		assert.Equal(t, 0, result.RecentFormSummary.MatchesAnalyzed)
+		assert.Empty(t, result.Overall.RecentForm)
+		assert.Empty(t, result.Home.RecentForm)
+		assert.Empty(t, result.Away.RecentForm)
+		assert.Equal(t, 0, result.Overall.RecentFormSummary.MatchesAnalyzed)
 	})
 
 	t.Run("builds form arrays correctly separating home and away", func(t *testing.T) {
@@ -243,11 +243,11 @@ func TestAnalyseService_TeamTournamentAnalysis(t *testing.T) {
 		result, err := service.TeamTournamentAnalysis(ctx, 100, 1, 10)
 
 		require.NoError(t, err)
-		assert.Len(t, result.RecentForm, 3)
-		assert.Len(t, result.RecentFormHome, 2)
-		assert.Len(t, result.RecentFormAway, 1)
-		assert.Equal(t, "home", result.RecentFormHome[0].Venue)
-		assert.Equal(t, "away", result.RecentFormAway[0].Venue)
+		assert.Len(t, result.Overall.RecentForm, 3)
+		assert.Len(t, result.Home.RecentForm, 2)
+		assert.Len(t, result.Away.RecentForm, 1)
+		assert.Equal(t, "home", result.Home.RecentForm[0].Venue)
+		assert.Equal(t, "away", result.Away.RecentForm[0].Venue)
 	})
 
 	t.Run("calculates form summary correctly", func(t *testing.T) {
@@ -280,12 +280,12 @@ func TestAnalyseService_TeamTournamentAnalysis(t *testing.T) {
 		result, err := service.TeamTournamentAnalysis(ctx, 100, 1, 10)
 
 		require.NoError(t, err)
-		assert.Equal(t, 3, result.RecentFormSummary.MatchesAnalyzed)
-		assert.Equal(t, 2, result.RecentFormSummary.Wins)
-		assert.Equal(t, 1, result.RecentFormSummary.Draws)
-		assert.Equal(t, 0, result.RecentFormSummary.Losses)
-		assert.Equal(t, 3, result.RecentFormSummary.GoalsFor)
-		assert.Equal(t, 4, result.RecentFormSummary.GoalsAgainst)
+		assert.Equal(t, 3, result.Overall.RecentFormSummary.MatchesAnalyzed)
+		assert.Equal(t, 2, result.Overall.RecentFormSummary.Wins)
+		assert.Equal(t, 1, result.Overall.RecentFormSummary.Draws)
+		assert.Equal(t, 0, result.Overall.RecentFormSummary.Losses)
+		assert.Equal(t, 3, result.Overall.RecentFormSummary.GoalsFor)
+		assert.Equal(t, 4, result.Overall.RecentFormSummary.GoalsAgainst)
 	})
 
 	t.Run("returns database errors from repositories", func(t *testing.T) {

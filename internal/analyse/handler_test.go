@@ -41,29 +41,37 @@ func TestAnalyseHandler_TeamTournamentAnalysis(t *testing.T) {
 		output := AnalyseOutput{
 			TeamID:       100,
 			TournamentID: 1,
-			HomeStats: VenueStats{
-				MatchesPlayed:     10,
-				Wins:              7,
-				Draws:             2,
-				Losses:            1,
-				GoalsFor:          22,
-				GoalsAgainst:      8,
-				WinRate:           0.7,
-				AvgGoalsScored:    &avgGoals,
-				AvgGoalsConceded:  &avgGoals,
-				FrequencyBTTS:     &avgGoals,
-				FrequencyOver15:   &avgGoals,
+			Home: VenueContext{
+				Stats: VenueStats{
+					MatchesPlayed:     10,
+					Wins:              7,
+					Draws:             2,
+					Losses:            1,
+					GoalsFor:          22,
+					GoalsAgainst:      8,
+					WinRate:           0.7,
+					AvgGoalsScored:    &avgGoals,
+					AvgGoalsConceded:  &avgGoals,
+					FrequencyBTTS:     &avgGoals,
+					FrequencyOver15:   &avgGoals,
+				},
+				RecentForm: []FormEntry{
+					{MatchID: 1, Result: "W", OpponentID: 200, OpponentName: "Team A", HomeScore: 2, AwayScore: 1, Venue: "home", Date: time.Now()},
+				},
+				RecentFormSummary: FormSummary{
+					MatchesAnalyzed: 1,
+					Wins:            1,
+					Draws:           0,
+					Losses:          0,
+					GoalsFor:        2,
+					GoalsAgainst:    1,
+				},
 			},
-			RecentForm: []FormEntry{
-				{MatchID: 1, Result: "W", OpponentID: 200, OpponentName: "Team A", HomeScore: 2, AwayScore: 1, Venue: "home", Date: time.Now()},
-			},
-			RecentFormSummary: FormSummary{
-				MatchesAnalyzed: 1,
-				Wins:            1,
-				Draws:           0,
-				Losses:          0,
-				GoalsFor:        2,
-				GoalsAgainst:    1,
+			Away:         VenueContext{},
+			Overall: VenueContext{
+				RecentForm: []FormEntry{
+					{MatchID: 1, Result: "W", OpponentID: 200, OpponentName: "Team A", HomeScore: 2, AwayScore: 1, Venue: "home", Date: time.Now()},
+				},
 			},
 			CalculatedAt: time.Now(),
 		}
@@ -87,9 +95,9 @@ func TestAnalyseHandler_TeamTournamentAnalysis(t *testing.T) {
 		assert.NotNil(t, response.Data)
 		assert.Equal(t, uint(100), response.Data.TeamID)
 		assert.Equal(t, uint(1), response.Data.TournamentID)
-		assert.Equal(t, 10, response.Data.HomeStats.MatchesPlayed)
-		assert.Equal(t, 7, response.Data.HomeStats.Wins)
-		assert.Len(t, response.Data.RecentForm, 1)
+		assert.Equal(t, 10, response.Data.Home.Stats.MatchesPlayed)
+		assert.Equal(t, 7, response.Data.Home.Stats.Wins)
+		assert.Len(t, response.Data.Overall.RecentForm, 1)
 	})
 
 	t.Run("returns 404 when stats not found", func(t *testing.T) {
@@ -188,7 +196,35 @@ func TestAnalyseHandler_TeamTournamentAnalysis(t *testing.T) {
 		output := AnalyseOutput{
 			TeamID:       100,
 			TournamentID: 1,
-			HomeStats:    VenueStats{MatchesPlayed: 0, Wins: 0, Draws: 0, Losses: 0, GoalsFor: 0, GoalsAgainst: 0, WinRate: 0, AvgGoalsScored: &avgGoals},
+			Home: VenueContext{
+				Stats: VenueStats{
+					MatchesPlayed:     10,
+					Wins:              7,
+					Draws:             2,
+					Losses:            1,
+					GoalsFor:          22,
+					GoalsAgainst:      8,
+					WinRate:           0.7,
+					AvgGoalsScored:    &avgGoals,
+				},
+				RecentForm: []FormEntry{
+					{MatchID: 1, Result: "W", OpponentID: 200, OpponentName: "Team A", HomeScore: 2, AwayScore: 1, Venue: "home", Date: time.Now()},
+				},
+				RecentFormSummary: FormSummary{
+					MatchesAnalyzed: 1,
+					Wins:            1,
+					Draws:           0,
+					Losses:          0,
+					GoalsFor:        2,
+					GoalsAgainst:    1,
+				},
+			},
+			Away:         VenueContext{},
+			Overall: VenueContext{
+				RecentForm: []FormEntry{
+					{MatchID: 1, Result: "W", OpponentID: 200, OpponentName: "Team A", HomeScore: 2, AwayScore: 1, Venue: "home", Date: time.Now()},
+				},
+			},
 			CalculatedAt: time.Now(),
 		}
 
@@ -210,7 +246,15 @@ func TestAnalyseHandler_TeamTournamentAnalysis(t *testing.T) {
 		output := AnalyseOutput{
 			TeamID:       100,
 			TournamentID: 1,
-			HomeStats:    VenueStats{MatchesPlayed: 0, Wins: 0, Draws: 0, Losses: 0, GoalsFor: 0, GoalsAgainst: 0, WinRate: 0, AvgGoalsScored: &avgGoals},
+			Home: VenueContext{
+				Stats: VenueStats{MatchesPlayed: 0, Wins: 0, Draws: 0, Losses: 0, GoalsFor: 0, GoalsAgainst: 0, WinRate: 0, AvgGoalsScored: &avgGoals},
+			},
+			Away:         VenueContext{},
+			Overall: VenueContext{
+				RecentForm: []FormEntry{
+					{MatchID: 1, Result: "W", OpponentID: 200, OpponentName: "Team A", HomeScore: 2, AwayScore: 1, Venue: "home", Date: time.Now()},
+				},
+			},
 			CalculatedAt: time.Now(),
 		}
 
