@@ -123,10 +123,12 @@ func buildRecentForm(ctx context.Context, matches []*match.MatchEntity, targetTe
 	for _, m := range matches {
 		var result string
 		var homeScore, awayScore int
+		var venue string
 
 		if targetTeamID == m.HomeTeamID {
 			homeScore = m.HomeTeamGoals
 			awayScore = m.AwayTeamGoals
+			venue = "home"
 
 			if homeScore > awayScore {
 				result = "W"
@@ -138,6 +140,7 @@ func buildRecentForm(ctx context.Context, matches []*match.MatchEntity, targetTe
 		} else {
 			homeScore = m.HomeTeamGoals
 			awayScore = m.AwayTeamGoals
+			venue = "away"
 
 			if awayScore > homeScore {
 				result = "W"
@@ -175,6 +178,7 @@ func buildRecentForm(ctx context.Context, matches []*match.MatchEntity, targetTe
 			AwayName:      awayName,
 			HomeScore:     homeScore,
 			AwayScore:     awayScore,
+			Venue:         venue,
 			HomeOdd:       m.HomeTeamOdd,
 			AwayOdd:       m.AwayTeamOdd,
 			DrawOdd:       m.DrawOdd,

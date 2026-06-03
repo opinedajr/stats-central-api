@@ -68,6 +68,7 @@ type FormEntry struct {
 	AwayName      string    `json:"away_name"`
 	HomeScore     int       `json:"home_score"`
 	AwayScore     int       `json:"away_score"`
+	Venue         string    `json:"venue"`
 	HomeOdd       *float64  `json:"home_odd,omitempty"`
 	AwayOdd       *float64  `json:"away_odd,omitempty"`
 	DrawOdd       *float64  `json:"draw_odd,omitempty"`
