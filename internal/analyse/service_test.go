@@ -14,7 +14,7 @@ type mockStatsRepository struct {
 	err   error
 }
 
-func (m *mockStatsRepository) GetTeamStats(ctx context.Context, teamID uint, tournamentID uint) (*TeamStatsEntity, error) {
+func (m *mockStatsRepository) GetTeamStats(ctx context.Context, teamID uint, tournamentID uint, season string) (*TeamStatsEntity, error) {
 	if m.err != nil {
 		return nil, m.err
 	}
@@ -32,28 +32,28 @@ type mockMatchRepository struct {
 	matchesErr   error
 }
 
-func (m *mockMatchRepository) GetRecentMatches(ctx context.Context, teamID uint, tournamentID uint, limit int) ([]*match.MatchEntity, error) {
+func (m *mockMatchRepository) GetRecentMatches(ctx context.Context, teamID uint, tournamentID uint, season string, limit int) ([]*match.MatchEntity, error) {
 	if m.matchesErr != nil {
 		return nil, m.matchesErr
 	}
 	return m.matches, nil
 }
 
-func (m *mockMatchRepository) GetHomeStats(ctx context.Context, teamID uint, tournamentID uint) (match.VenueStatsEntity, error) {
+func (m *mockMatchRepository) GetHomeStats(ctx context.Context, teamID uint, tournamentID uint, season string) (match.VenueStatsEntity, error) {
 	if m.homeErr != nil {
 		return match.VenueStatsEntity{}, m.homeErr
 	}
 	return m.homeStats, nil
 }
 
-func (m *mockMatchRepository) GetAwayStats(ctx context.Context, teamID uint, tournamentID uint) (match.VenueStatsEntity, error) {
+func (m *mockMatchRepository) GetAwayStats(ctx context.Context, teamID uint, tournamentID uint, season string) (match.VenueStatsEntity, error) {
 	if m.awayErr != nil {
 		return match.VenueStatsEntity{}, m.awayErr
 	}
 	return m.awayStats, nil
 }
 
-func (m *mockMatchRepository) GetOverallStats(ctx context.Context, teamID uint, tournamentID uint) (match.VenueStatsEntity, error) {
+func (m *mockMatchRepository) GetOverallStats(ctx context.Context, teamID uint, tournamentID uint, season string) (match.VenueStatsEntity, error) {
 	if m.overallErr != nil {
 		return match.VenueStatsEntity{}, m.overallErr
 	}
@@ -95,7 +95,7 @@ func TestAnalyseService_TeamTournamentAnalysis(t *testing.T) {
 		}
 
 		service := NewAnalyseService(statsRepo, matchesRepo)
-		result, err := service.TeamTournamentAnalysis(ctx, 100, 1, 10)
+		result, err := service.TeamTournamentAnalysis(ctx, 100, 1, "2024", 10)
 
 		require.NoError(t, err)
 		assert.Equal(t, uint(100), result.TeamID)
@@ -111,7 +111,7 @@ func TestAnalyseService_TeamTournamentAnalysis(t *testing.T) {
 		matchesRepo := &mockMatchRepository{}
 
 		service := NewAnalyseService(statsRepo, matchesRepo)
-		_, err := service.TeamTournamentAnalysis(ctx, 100, 1, 10)
+		_, err := service.TeamTournamentAnalysis(ctx, 100, 1, "2024", 10)
 
 		assert.Error(t, err)
 		assert.Equal(t, ErrStatsNotFound, err)
@@ -144,12 +144,12 @@ func TestAnalyseService_TeamTournamentAnalysis(t *testing.T) {
 		service := NewAnalyseService(statsRepo, matchesRepo)
 
 		t.Run("zero or negative last_n defaults to 10", func(t *testing.T) {
-			_, err := service.TeamTournamentAnalysis(ctx, 100, 1, 0)
+			_, err := service.TeamTournamentAnalysis(ctx, 100, 1, "2024", 0)
 			require.NoError(t, err)
 		})
 
 		t.Run("last_n greater than 50 is capped at 50", func(t *testing.T) {
-			_, err := service.TeamTournamentAnalysis(ctx, 100, 1, 100)
+			_, err := service.TeamTournamentAnalysis(ctx, 100, 1, "2024", 100)
 			require.NoError(t, err)
 		})
 	})
@@ -174,7 +174,7 @@ func TestAnalyseService_TeamTournamentAnalysis(t *testing.T) {
 		}
 
 		service := NewAnalyseService(statsRepo, matchesRepo)
-		result, err := service.TeamTournamentAnalysis(ctx, 100, 1, 10)
+		result, err := service.TeamTournamentAnalysis(ctx, 100, 1, "2024", 10)
 
 		require.NoError(t, err)
 		assert.Equal(t, 0.0, result.Home.Stats.WinRate)
@@ -202,7 +202,7 @@ func TestAnalyseService_TeamTournamentAnalysis(t *testing.T) {
 		}
 
 		service := NewAnalyseService(statsRepo, matchesRepo)
-		result, err := service.TeamTournamentAnalysis(ctx, 100, 1, 10)
+		result, err := service.TeamTournamentAnalysis(ctx, 100, 1, "2024", 10)
 
 		require.NoError(t, err)
 		assert.Empty(t, result.Overall.RecentForm)
@@ -240,7 +240,7 @@ func TestAnalyseService_TeamTournamentAnalysis(t *testing.T) {
 		}
 
 		service := NewAnalyseService(statsRepo, matchesRepo)
-		result, err := service.TeamTournamentAnalysis(ctx, 100, 1, 10)
+		result, err := service.TeamTournamentAnalysis(ctx, 100, 1, "2024", 10)
 
 		require.NoError(t, err)
 		assert.Len(t, result.Overall.RecentForm, 3)
@@ -277,7 +277,7 @@ func TestAnalyseService_TeamTournamentAnalysis(t *testing.T) {
 		}
 
 		service := NewAnalyseService(statsRepo, matchesRepo)
-		result, err := service.TeamTournamentAnalysis(ctx, 100, 1, 10)
+		result, err := service.TeamTournamentAnalysis(ctx, 100, 1, "2024", 10)
 
 		require.NoError(t, err)
 		assert.Equal(t, 3, result.Overall.RecentFormSummary.MatchesAnalyzed)
@@ -293,7 +293,7 @@ func TestAnalyseService_TeamTournamentAnalysis(t *testing.T) {
 		matchesRepo := &mockMatchRepository{}
 
 		service := NewAnalyseService(statsRepo, matchesRepo)
-		_, err := service.TeamTournamentAnalysis(ctx, 100, 1, 10)
+		_, err := service.TeamTournamentAnalysis(ctx, 100, 1, "2024", 10)
 
 		assert.Error(t, err)
 	})

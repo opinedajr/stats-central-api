@@ -13,7 +13,7 @@ const (
 )
 
 type Service interface {
-	TeamTournamentAnalysis(ctx context.Context, teamID uint, tournamentID uint, lastN int) (AnalyseOutput, error)
+	TeamTournamentAnalysis(ctx context.Context, teamID uint, tournamentID uint, season string, lastN int) (AnalyseOutput, error)
 }
 
 type analyseService struct {
@@ -28,7 +28,7 @@ func NewAnalyseService(statsRepo StatsRepository, matchesRepo match.Repository) 
 	}
 }
 
-func (s *analyseService) TeamTournamentAnalysis(ctx context.Context, teamID uint, tournamentID uint, lastN int) (AnalyseOutput, error) {
+func (s *analyseService) TeamTournamentAnalysis(ctx context.Context, teamID uint, tournamentID uint, season string, lastN int) (AnalyseOutput, error) {
 	if lastN <= 0 {
 		lastN = defaultLastN
 	}
@@ -36,27 +36,27 @@ func (s *analyseService) TeamTournamentAnalysis(ctx context.Context, teamID uint
 		lastN = maxLastN
 	}
 
-	preCalcStats, err := s.statsRepo.GetTeamStats(ctx, teamID, tournamentID)
+	preCalcStats, err := s.statsRepo.GetTeamStats(ctx, teamID, tournamentID, season)
 	if err != nil {
 		return AnalyseOutput{}, err
 	}
 
-	homeStats, err := s.matchesRepo.GetHomeStats(ctx, teamID, tournamentID)
+	homeStats, err := s.matchesRepo.GetHomeStats(ctx, teamID, tournamentID, season)
 	if err != nil {
 		return AnalyseOutput{}, err
 	}
 
-	awayStats, err := s.matchesRepo.GetAwayStats(ctx, teamID, tournamentID)
+	awayStats, err := s.matchesRepo.GetAwayStats(ctx, teamID, tournamentID, season)
 	if err != nil {
 		return AnalyseOutput{}, err
 	}
 
-	overallStats, err := s.matchesRepo.GetOverallStats(ctx, teamID, tournamentID)
+	overallStats, err := s.matchesRepo.GetOverallStats(ctx, teamID, tournamentID, season)
 	if err != nil {
 		return AnalyseOutput{}, err
 	}
 
-	matches, err := s.matchesRepo.GetRecentMatches(ctx, teamID, tournamentID, lastN*3)
+	matches, err := s.matchesRepo.GetRecentMatches(ctx, teamID, tournamentID, season, lastN*3)
 	if err != nil {
 		return AnalyseOutput{}, err
 	}
@@ -187,7 +187,8 @@ func mapVenueStats(calcStats match.VenueStatsEntity, preCalcStats *TeamStatsEnti
 		WinRate:       winRate,
 	}
 
-	if venue == "home" {
+	switch venue {
+	case "home":
 		result.AvgGoalsScored = preCalcStats.AvgGoalsScoredHome
 		result.AvgGoalsConceded = preCalcStats.AvgGoalsConcededHome
 		result.AvgCornersScored = preCalcStats.AvgCornersScoredHome
@@ -199,7 +200,11 @@ func mapVenueStats(calcStats match.VenueStatsEntity, preCalcStats *TeamStatsEnti
 		result.FrequencyOver25 = preCalcStats.FrequencyOver25Home
 		result.FrequencyOver35 = preCalcStats.FrequencyOver35Home
 		result.FrequencyCorners85 = preCalcStats.FrequencyCorners85Home
-	} else if venue == "away" {
+		result.FrequencyFirstToScore = preCalcStats.FrequencyFirstToScoreHome
+		result.FrequencyGoal20 = preCalcStats.FrequencyGoal20Home
+		result.FrequencyGoal45 = preCalcStats.FrequencyGoal45Home
+		result.FrequencyGoal70 = preCalcStats.FrequencyGoal70Home
+	case "away":
 		result.AvgGoalsScored = preCalcStats.AvgGoalsScoredAway
 		result.AvgGoalsConceded = preCalcStats.AvgGoalsConcededAway
 		result.AvgCornersScored = preCalcStats.AvgCornersScoredAway
@@ -211,7 +216,11 @@ func mapVenueStats(calcStats match.VenueStatsEntity, preCalcStats *TeamStatsEnti
 		result.FrequencyOver25 = preCalcStats.FrequencyOver25Away
 		result.FrequencyOver35 = preCalcStats.FrequencyOver35Away
 		result.FrequencyCorners85 = preCalcStats.FrequencyCorners85Away
-	} else {
+		result.FrequencyFirstToScore = preCalcStats.FrequencyFirstToScoreAway
+		result.FrequencyGoal20 = preCalcStats.FrequencyGoal20Away
+		result.FrequencyGoal45 = preCalcStats.FrequencyGoal45Away
+		result.FrequencyGoal70 = preCalcStats.FrequencyGoal70Away
+	default:
 		result.AvgGoalsScored = preCalcStats.AvgGoalsScored
 		result.AvgGoalsConceded = preCalcStats.AvgGoalsConceded
 		result.AvgCornersScored = preCalcStats.AvgCornersScored
@@ -236,11 +245,12 @@ func summarizeForm(form []FormEntry) FormSummary {
 		summary.GoalsFor += entry.HomeScore
 		summary.GoalsAgainst += entry.AwayScore
 
-		if entry.Result == "W" {
+		switch entry.Result {
+		case "W":
 			summary.Wins++
-		} else if entry.Result == "D" {
+		case "D":
 			summary.Draws++
-		} else {
+		default:
 			summary.Losses++
 		}
 	}
