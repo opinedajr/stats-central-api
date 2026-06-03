@@ -172,7 +172,7 @@ func (c *Container) StatsRepository() analyse.StatsRepository {
 
 func (c *Container) AnalyseService() analyse.Service {
 	if c.services.analyseService == nil {
-		c.services.analyseService = analyse.NewAnalyseService(c.StatsRepository(), c.MatchRepository())
+		c.services.analyseService = analyse.NewAnalyseService(c.StatsRepository(), c.MatchRepository(), c.TeamsRepository())
 	}
 	return c.services.analyseService
 }

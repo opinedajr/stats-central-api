@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/opinedajr/stats-central-api/internal/match"
+	"github.com/opinedajr/stats-central-api/internal/teams"
 )
 
 const (
@@ -19,12 +20,14 @@ type Service interface {
 type analyseService struct {
 	statsRepo   StatsRepository
 	matchesRepo match.Repository
+	teamsRepo   teams.Repository
 }
 
-func NewAnalyseService(statsRepo StatsRepository, matchesRepo match.Repository) Service {
+func NewAnalyseService(statsRepo StatsRepository, matchesRepo match.Repository, teamsRepo teams.Repository) Service {
 	return &analyseService{
 		statsRepo:   statsRepo,
 		matchesRepo: matchesRepo,
+		teamsRepo:   teamsRepo,
 	}
 }
 
@@ -64,9 +67,9 @@ func (s *analyseService) TeamTournamentAnalysis(ctx context.Context, teamID uint
 	homeMatches := filterHome(matches, teamID)
 	awayMatches := filterAway(matches, teamID)
 
-	recentOverall := buildRecentForm(matches, teamID, lastN)
-	recentHome := buildRecentForm(homeMatches, teamID, lastN)
-	recentAway := buildRecentForm(awayMatches, teamID, lastN)
+	recentOverall := buildRecentForm(ctx, matches, teamID, lastN, s.teamsRepo)
+	recentHome := buildRecentForm(ctx, homeMatches, teamID, lastN, s.teamsRepo)
+	recentAway := buildRecentForm(ctx, awayMatches, teamID, lastN, s.teamsRepo)
 
 	return AnalyseOutput{
 		TeamID:       teamID,
@@ -110,7 +113,7 @@ func filterAway(matches []*match.MatchEntity, teamID uint) []*match.MatchEntity 
 	return away
 }
 
-func buildRecentForm(matches []*match.MatchEntity, targetTeamID uint, limit int) []FormEntry {
+func buildRecentForm(ctx context.Context, matches []*match.MatchEntity, targetTeamID uint, limit int, teamsRepo teams.Repository) []FormEntry {
 	if len(matches) > limit {
 		matches = matches[:limit]
 	}
@@ -119,15 +122,11 @@ func buildRecentForm(matches []*match.MatchEntity, targetTeamID uint, limit int)
 
 	for _, m := range matches {
 		var result string
-		var opponentID uint
 		var homeScore, awayScore int
-		var venue string
 
 		if targetTeamID == m.HomeTeamID {
-			opponentID = m.AwayTeamID
 			homeScore = m.HomeTeamGoals
 			awayScore = m.AwayTeamGoals
-			venue = "home"
 
 			if homeScore > awayScore {
 				result = "W"
@@ -137,10 +136,8 @@ func buildRecentForm(matches []*match.MatchEntity, targetTeamID uint, limit int)
 				result = "L"
 			}
 		} else {
-			opponentID = m.HomeTeamID
 			homeScore = m.HomeTeamGoals
 			awayScore = m.AwayTeamGoals
-			venue = "away"
 
 			if awayScore > homeScore {
 				result = "W"
@@ -151,20 +148,43 @@ func buildRecentForm(matches []*match.MatchEntity, targetTeamID uint, limit int)
 			}
 		}
 
+		homeTeam, _ := teamsRepo.FindByID(ctx, m.HomeTeamID)
+		awayTeam, _ := teamsRepo.FindByID(ctx, m.AwayTeamID)
+
+		homeName := ""
+		if homeTeam != nil {
+			homeName = homeTeam.Name
+		}
+
+		awayName := ""
+		if awayTeam != nil {
+			awayName = awayTeam.Name
+		}
+
 		var date time.Time
 		if m.DateTimestamp != nil {
 			date = time.Unix(*m.DateTimestamp, 0)
 		}
 
 		entries = append(entries, FormEntry{
-			MatchID:      m.ID,
-			Result:       result,
-			OpponentID:   opponentID,
-			OpponentName: "",
-			HomeScore:    homeScore,
-			AwayScore:    awayScore,
-			Venue:        venue,
-			Date:         date,
+			MatchID:       m.ID,
+			Result:        result,
+			HomeID:        m.HomeTeamID,
+			HomeName:      homeName,
+			AwayID:        m.AwayTeamID,
+			AwayName:      awayName,
+			HomeScore:     homeScore,
+			AwayScore:     awayScore,
+			HomeOdd:       m.HomeTeamOdd,
+			AwayOdd:       m.AwayTeamOdd,
+			DrawOdd:       m.DrawOdd,
+			FirstToScore:  m.FirstToScore,
+			SecondToScore: m.SecondToScore,
+			ThirdToScore:  m.ThirdToScore,
+			Goal1Minute:   m.Goal1Minute,
+			Goal2Minute:   m.Goal2Minute,
+			Goal3Minute:   m.Goal3Minute,
+			Date:          date,
 		})
 	}
 
