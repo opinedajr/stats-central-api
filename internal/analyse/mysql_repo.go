@@ -17,11 +17,11 @@ func NewMysqlStatsRepository(db *gorm.DB) StatsRepository {
 	}
 }
 
-func (r *mysqlStatsRepository) GetTeamStats(ctx context.Context, teamID uint, tournamentID uint) (*TeamStatsEntity, error) {
+func (r *mysqlStatsRepository) GetTeamStats(ctx context.Context, teamID uint, tournamentID uint, season string) (*TeamStatsEntity, error) {
 	var stats TeamStatsEntity
 
 	err := r.db.WithContext(ctx).
-		Where("time_id = ? AND liga_id = ?", teamID, tournamentID).
+		Where("time_id = ? AND liga_id = ? AND temporada = ?", teamID, tournamentID, season).
 		First(&stats).Error
 
 	if err != nil {

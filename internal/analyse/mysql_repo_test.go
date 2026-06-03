@@ -70,7 +70,7 @@ func setupAnalyseTestDB(t *testing.T) *gorm.DB {
 	return db
 }
 
-func insertTestStats(t *testing.T, db *gorm.DB, teamID, leagueID int, avgGoalsScored, avgGoalsConceded float64) {
+func insertTestStats(t *testing.T, db *gorm.DB, teamID, leagueID int, avgGoalsScored, avgGoalsConceded float64, season string) {
 	avgScored := avgGoalsScored
 	avgConceded := avgGoalsConceded
 
@@ -79,8 +79,8 @@ func insertTestStats(t *testing.T, db *gorm.DB, teamID, leagueID int, avgGoalsSc
 			time_id, liga_id, temporada, media_gols_marcados, media_gols_sofridos,
 			media_gols_marcados_mandante, media_gols_sofridos_mandante,
 			media_gols_marcados_visitante, media_gols_sofridos_visitante
-		) VALUES (?, ?, '2024', ?, ?, ?, ?, ?, ?)
-	`, teamID, leagueID, avgScored, avgConceded, avgScored, avgConceded, avgScored, avgConceded).Error
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+	`, teamID, leagueID, season, avgScored, avgConceded, avgScored, avgConceded, avgScored, avgConceded).Error
 	require.NoError(t, err)
 }
 
@@ -89,11 +89,11 @@ func TestStatsRepository_GetTeamStats(t *testing.T) {
 	repo := NewMysqlStatsRepository(db)
 	ctx := context.Background()
 
-	insertTestStats(t, db, 100, 1, 2.5, 1.2)
-	insertTestStats(t, db, 100, 2, 1.8, 0.9)
+	insertTestStats(t, db, 100, 1, 2.5, 1.2, "2024")
+	insertTestStats(t, db, 100, 2, 1.8, 0.9, "2024")
 
 	t.Run("returns stats for existing team and tournament", func(t *testing.T) {
-		stats, err := repo.GetTeamStats(ctx, 100, 1)
+		stats, err := repo.GetTeamStats(ctx, 100, 1, "2024")
 
 		require.NoError(t, err)
 		assert.NotNil(t, stats)
@@ -106,7 +106,7 @@ func TestStatsRepository_GetTeamStats(t *testing.T) {
 	})
 
 	t.Run("filters by tournament correctly", func(t *testing.T) {
-		stats, err := repo.GetTeamStats(ctx, 100, 2)
+		stats, err := repo.GetTeamStats(ctx, 100, 2, "2024")
 
 		require.NoError(t, err)
 		assert.NotNil(t, stats)
@@ -114,7 +114,7 @@ func TestStatsRepository_GetTeamStats(t *testing.T) {
 	})
 
 	t.Run("returns ErrStatsNotFound when no matching record", func(t *testing.T) {
-		stats, err := repo.GetTeamStats(ctx, 999, 1)
+		stats, err := repo.GetTeamStats(ctx, 999, 1, "2024")
 
 		assert.Error(t, err)
 		assert.Nil(t, stats)
@@ -128,11 +128,46 @@ func TestStatsRepository_GetTeamStats(t *testing.T) {
 		`).Error
 		require.NoError(t, err)
 
-		stats, err := repo.GetTeamStats(ctx, 200, 1)
+		stats, err := repo.GetTeamStats(ctx, 200, 1, "2024")
 
 		require.NoError(t, err)
 		assert.NotNil(t, stats)
 		assert.Nil(t, stats.AvgGoalsScored)
 		assert.Nil(t, stats.AvgGoalsConceded)
+	})
+}
+
+func TestStatsRepository_filtersBySeason(t *testing.T) {
+	db := setupAnalyseTestDB(t)
+	repo := NewMysqlStatsRepository(db)
+	ctx := context.Background()
+
+	insertTestStats(t, db, 100, 1, 2.5, 1.2, "2024")
+	insertTestStats(t, db, 100, 1, 1.8, 0.9, "2023")
+
+	t.Run("returns different stats for different seasons", func(t *testing.T) {
+		stats2024, err := repo.GetTeamStats(ctx, 100, 1, "2024")
+
+		require.NoError(t, err)
+		assert.NotNil(t, stats2024)
+		assert.Equal(t, uint(100), stats2024.TeamID)
+		assert.Equal(t, uint(1), stats2024.LeagueID)
+		assert.Equal(t, "2024", stats2024.Season)
+		assert.InDelta(t, 2.5, *stats2024.AvgGoalsScored, 0.01)
+
+		stats2023, err := repo.GetTeamStats(ctx, 100, 1, "2023")
+
+		require.NoError(t, err)
+		assert.NotNil(t, stats2023)
+		assert.Equal(t, "2023", stats2023.Season)
+		assert.InDelta(t, 1.8, *stats2023.AvgGoalsScored, 0.01)
+	})
+
+	t.Run("returns ErrStatsNotFound when season does not exist", func(t *testing.T) {
+		stats, err := repo.GetTeamStats(ctx, 100, 1, "2022")
+
+		assert.Error(t, err)
+		assert.Nil(t, stats)
+		assert.Equal(t, ErrStatsNotFound, err)
 	})
 }
