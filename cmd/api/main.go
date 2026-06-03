@@ -38,7 +38,7 @@ func main() {
 			teams.DELETE("/:teamId", container.TeamsHandler().MethodNotAllowed)
 			teams.PATCH("/:teamId", container.TeamsHandler().MethodNotAllowed)
 
-			analysis := teams.Group("/:teamId/tournaments/:tournamentId/analysis")
+			analysis := teams.Group("/:teamId/analysis")
 			{
 				analysis.GET("", container.AnalyseHandler().TeamTournamentAnalysis)
 				analysis.POST("", container.AnalyseHandler().MethodNotAllowed)
