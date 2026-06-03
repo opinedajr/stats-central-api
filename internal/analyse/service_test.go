@@ -421,10 +421,10 @@ func TestAnalyseService_summarizeForm(t *testing.T) {
 		{
 			name: "calculates summary correctly",
 			form: []FormEntry{
-				{Result: "W", HomeScore: 2, AwayScore: 1},
-				{Result: "W", HomeScore: 3, AwayScore: 0},
-				{Result: "D", HomeScore: 1, AwayScore: 1},
-				{Result: "L", HomeScore: 0, AwayScore: 2},
+				{Result: "W", HomeScore: 2, AwayScore: 1, Venue: "home"},
+				{Result: "W", HomeScore: 3, AwayScore: 0, Venue: "home"},
+				{Result: "D", HomeScore: 1, AwayScore: 1, Venue: "home"},
+				{Result: "L", HomeScore: 0, AwayScore: 2, Venue: "away"},
 			},
 			expectedMatches:    4,
 			expectedWins:      2,

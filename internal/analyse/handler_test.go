@@ -56,7 +56,7 @@ func TestAnalyseHandler_TeamTournamentAnalysis(t *testing.T) {
 					FrequencyOver15:   &avgGoals,
 				},
 				RecentForm: []FormEntry{
-					{MatchID: 1, Result: "W", HomeID: 100, HomeName: "Team Home", AwayID: 200, AwayName: "Team A", HomeScore: 2, AwayScore: 1, Date: time.Now()},
+					{MatchID: 1, Result: "W", HomeID: 100, HomeName: "Team Home", AwayID: 200, AwayName: "Team A", HomeScore: 2, AwayScore: 1, Venue: "home", Date: time.Now()},
 				},
 				RecentFormSummary: FormSummary{
 					MatchesAnalyzed: 1,
@@ -70,7 +70,7 @@ func TestAnalyseHandler_TeamTournamentAnalysis(t *testing.T) {
 			Away:         VenueContext{},
 			Overall: VenueContext{
 				RecentForm: []FormEntry{
-					{MatchID: 1, Result: "W", HomeID: 100, HomeName: "Team Home", AwayID: 200, AwayName: "Team A", HomeScore: 2, AwayScore: 1, Date: time.Now()},
+					{MatchID: 1, Result: "W", HomeID: 100, HomeName: "Team Home", AwayID: 200, AwayName: "Team A", HomeScore: 2, AwayScore: 1, Venue: "home", Date: time.Now()},
 				},
 			},
 			CalculatedAt: time.Now(),
@@ -208,7 +208,7 @@ func TestAnalyseHandler_TeamTournamentAnalysis(t *testing.T) {
 					AvgGoalsScored:    &avgGoals,
 				},
 				RecentForm: []FormEntry{
-					{MatchID: 1, Result: "W", HomeID: 100, HomeName: "Team Home", AwayID: 200, AwayName: "Team A", HomeScore: 2, AwayScore: 1, Date: time.Now()},
+					{MatchID: 1, Result: "W", HomeID: 100, HomeName: "Team Home", AwayID: 200, AwayName: "Team A", HomeScore: 2, AwayScore: 1, Venue: "home", Date: time.Now()},
 				},
 				RecentFormSummary: FormSummary{
 					MatchesAnalyzed: 1,
@@ -222,7 +222,7 @@ func TestAnalyseHandler_TeamTournamentAnalysis(t *testing.T) {
 			Away:         VenueContext{},
 			Overall: VenueContext{
 				RecentForm: []FormEntry{
-					{MatchID: 1, Result: "W", HomeID: 100, HomeName: "Team Home", AwayID: 200, AwayName: "Team A", HomeScore: 2, AwayScore: 1, Date: time.Now()},
+					{MatchID: 1, Result: "W", HomeID: 100, HomeName: "Team Home", AwayID: 200, AwayName: "Team A", HomeScore: 2, AwayScore: 1, Venue: "home", Date: time.Now()},
 				},
 			},
 			CalculatedAt: time.Now(),
@@ -252,7 +252,7 @@ func TestAnalyseHandler_TeamTournamentAnalysis(t *testing.T) {
 			Away:         VenueContext{},
 			Overall: VenueContext{
 				RecentForm: []FormEntry{
-					{MatchID: 1, Result: "W", HomeID: 100, HomeName: "Team Home", AwayID: 200, AwayName: "Team A", HomeScore: 2, AwayScore: 1, Date: time.Now()},
+					{MatchID: 1, Result: "W", HomeID: 100, HomeName: "Team Home", AwayID: 200, AwayName: "Team A", HomeScore: 2, AwayScore: 1, Venue: "home", Date: time.Now()},
 				},
 			},
 			CalculatedAt: time.Now(),
