@@ -11,8 +11,17 @@ type MatchEntity struct {
 	Time           int    `gorm:"column:tempo"`
 	HomeTeamID     uint   `gorm:"column:time_mandante_id"`
 	HomeTeamGoals  int    `gorm:"column:time_mandante_gols"`
+	HomeTeamOdd    *float64 `gorm:"column:time_mandante_odd"`
 	AwayTeamID     uint   `gorm:"column:time_visitante_id"`
 	AwayTeamGoals  int    `gorm:"column:time_visitante_gols"`
+	AwayTeamOdd    *float64 `gorm:"column:time_visitante_odd"`
+	DrawOdd        *float64 `gorm:"column:empate_odd"`
+	FirstToScore   *int      `gorm:"column:primeiro_marcar"`
+	SecondToScore  *int      `gorm:"column:segundo_marcar"`
+	ThirdToScore   *int      `gorm:"column:terceiro_marcar"`
+	Goal1Minute    *int      `gorm:"column:minuto_gol1"`
+	Goal2Minute    *int      `gorm:"column:minuto_gol2"`
+	Goal3Minute    *int      `gorm:"column:minuto_gol3"`
 }
 
 func (MatchEntity) TableName() string {

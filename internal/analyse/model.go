@@ -60,12 +60,22 @@ func (TeamStatsEntity) TableName() string {
 }
 
 type FormEntry struct {
-	MatchID      uint      `json:"match_id"`
-	Result       string    `json:"result"`
-	OpponentID   uint      `json:"opponent_id"`
-	OpponentName string    `json:"opponent_name"`
-	HomeScore    int       `json:"home_score"`
-	AwayScore    int       `json:"away_score"`
-	Venue        string    `json:"venue"`
-	Date         time.Time `json:"date"`
+	MatchID       uint      `json:"match_id"`
+	Result        string    `json:"result"`
+	HomeID        uint      `json:"home_id"`
+	HomeName      string    `json:"home_name"`
+	AwayID        uint      `json:"away_id"`
+	AwayName      string    `json:"away_name"`
+	HomeScore     int       `json:"home_score"`
+	AwayScore     int       `json:"away_score"`
+	HomeOdd       *float64  `json:"home_odd,omitempty"`
+	AwayOdd       *float64  `json:"away_odd,omitempty"`
+	DrawOdd       *float64  `json:"draw_odd,omitempty"`
+	FirstToScore  *int      `json:"first_to_score,omitempty"`
+	SecondToScore *int      `json:"second_to_score,omitempty"`
+	ThirdToScore  *int      `json:"third_to_score,omitempty"`
+	Goal1Minute   *int      `json:"goal1_minute,omitempty"`
+	Goal2Minute   *int      `json:"goal2_minute,omitempty"`
+	Goal3Minute   *int      `json:"goal3_minute,omitempty"`
+	Date          time.Time `json:"date"`
 }
