@@ -27,9 +27,18 @@ func setupTestDB(t *testing.T) *gorm.DB {
 			time_mandante_id INTEGER NOT NULL,
 			time_mandante_gols INTEGER NOT NULL,
 			time_visitante_id INTEGER NOT NULL,
-			time_visitante_gols INTEGER NOT NULL DEFAULT 0
-		)
-	`).Error
+			time_visitante_gols INTEGER NOT NULL DEFAULT 0,
+				time_mandante_odd REAL,
+				time_visitante_odd REAL,
+				empate_odd REAL,
+				primeiro_marcar INTEGER,
+				segundo_marcar INTEGER,
+				terceiro_marcar INTEGER,
+				minuto_gol1 INTEGER,
+				minuto_gol2 INTEGER,
+				minuto_gol3 INTEGER
+			)
+		`).Error
 	require.NoError(t, err)
 
 	return db

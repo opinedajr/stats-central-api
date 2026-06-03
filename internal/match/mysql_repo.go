@@ -21,7 +21,7 @@ func (r *mysqlRepository) GetRecentMatches(ctx context.Context, teamID uint, tou
 
 	err := r.db.WithContext(ctx).
 		Table("jogos").
-		Select("id, sofascore_id, liga_id, temporada, rodada, data_timestamp, status, tempo, time_mandante_id, time_mandante_gols, time_visitante_id, time_visitante_gols").
+		Select("id, sofascore_id, liga_id, temporada, rodada, data_timestamp, status, tempo, time_mandante_id, time_mandante_gols, time_mandante_odd, time_visitante_id, time_visitante_gols, time_visitante_odd, empate_odd, primeiro_marcar, segundo_marcar, terceiro_marcar, minuto_gol1, minuto_gol2, minuto_gol3").
 		Where("(time_mandante_id = ? OR time_visitante_id = ?) AND liga_id = ? AND temporada = ? AND status IN (?, ?) AND tempo = ?", teamID, teamID, tournamentID, season, StatusFulltime, StatusFinished, FullTimeMatchDuration).
 		Order("data_timestamp DESC").
 		Limit(limit).
