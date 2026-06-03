@@ -22,7 +22,7 @@ type mockAnalyseService struct {
 	err    error
 }
 
-func (m *mockAnalyseService) TeamTournamentAnalysis(ctx context.Context, teamID uint, tournamentID uint, lastN int) (AnalyseOutput, error) {
+func (m *mockAnalyseService) TeamTournamentAnalysis(ctx context.Context, teamID uint, tournamentID uint, season string, lastN int) (AnalyseOutput, error) {
 	if m.err != nil {
 		return AnalyseOutput{}, m.err
 	}
@@ -80,9 +80,9 @@ func TestAnalyseHandler_TeamTournamentAnalysis(t *testing.T) {
 		log := logger.NewLogger("info")
 		handler := NewAnalyseHandler(mockService, log)
 		router := setupTestRouter(handler)
-		router.GET("/analyse/team/:teamId/tournament/:tournamentId/analyse", handler.TeamTournamentAnalysis)
+		router.GET("/analyse/team/:teamId/analysis", handler.TeamTournamentAnalysis)
 
-		req, _ := http.NewRequest("GET", "/analyse/team/100/tournament/1/analyse?last_n=10", nil)
+		req, _ := http.NewRequest("GET", "/analyse/team/100/analysis?tournament_id=1&season=2024&last_n=10", nil)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
@@ -105,9 +105,9 @@ func TestAnalyseHandler_TeamTournamentAnalysis(t *testing.T) {
 		log := logger.NewLogger("info")
 		handler := NewAnalyseHandler(mockService, log)
 		router := setupTestRouter(handler)
-		router.GET("/analyse/team/:teamId/tournament/:tournamentId/analyse", handler.TeamTournamentAnalysis)
+		router.GET("/analyse/team/:teamId/analysis", handler.TeamTournamentAnalysis)
 
-		req, _ := http.NewRequest("GET", "/analyse/team/100/tournament/1/analyse", nil)
+		req, _ := http.NewRequest("GET", "/analyse/team/100/analysis?tournament_id=1&season=2024", nil)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
@@ -126,9 +126,9 @@ func TestAnalyseHandler_TeamTournamentAnalysis(t *testing.T) {
 		log := logger.NewLogger("info")
 		handler := NewAnalyseHandler(mockService, log)
 		router := setupTestRouter(handler)
-		router.GET("/analyse/team/:teamId/tournament/:tournamentId/analyse", handler.TeamTournamentAnalysis)
+		router.GET("/analyse/team/:teamId/analysis", handler.TeamTournamentAnalysis)
 
-		req, _ := http.NewRequest("GET", "/analyse/team/100/tournament/1/analyse", nil)
+		req, _ := http.NewRequest("GET", "/analyse/team/100/analysis?tournament_id=1&season=2024", nil)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
@@ -140,9 +140,9 @@ func TestAnalyseHandler_TeamTournamentAnalysis(t *testing.T) {
 		log := logger.NewLogger("info")
 		handler := NewAnalyseHandler(mockService, log)
 		router := setupTestRouter(handler)
-		router.GET("/analyse/team/:teamId/tournament/:tournamentId/analyse", handler.TeamTournamentAnalysis)
+		router.GET("/analyse/team/:teamId/analysis", handler.TeamTournamentAnalysis)
 
-		req, _ := http.NewRequest("GET", "/analyse/team/100/tournament/1/analyse", nil)
+		req, _ := http.NewRequest("GET", "/analyse/team/100/analysis?tournament_id=1&season=2024", nil)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
@@ -154,9 +154,9 @@ func TestAnalyseHandler_TeamTournamentAnalysis(t *testing.T) {
 		log := logger.NewLogger("info")
 		handler := NewAnalyseHandler(mockService, log)
 		router := setupTestRouter(handler)
-		router.GET("/analyse/team/:teamId/tournament/:tournamentId/analyse", handler.TeamTournamentAnalysis)
+		router.GET("/analyse/team/:teamId/analysis", handler.TeamTournamentAnalysis)
 
-		req, _ := http.NewRequest("GET", "/analyse/team/invalid/tournament/1/analyse", nil)
+		req, _ := http.NewRequest("GET", "/analyse/team/invalid/analysis?tournament_id=1&season=2024", nil)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
@@ -175,9 +175,9 @@ func TestAnalyseHandler_TeamTournamentAnalysis(t *testing.T) {
 		log := logger.NewLogger("info")
 		handler := NewAnalyseHandler(mockService, log)
 		router := setupTestRouter(handler)
-		router.GET("/analyse/team/:teamId/tournament/:tournamentId/analyse", handler.TeamTournamentAnalysis)
+		router.GET("/analyse/team/:teamId/analysis", handler.TeamTournamentAnalysis)
 
-		req, _ := http.NewRequest("GET", "/analyse/team/100/tournament/invalid/analyse", nil)
+		req, _ := http.NewRequest("GET", "/analyse/team/100/analysis?season=2024", nil)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
@@ -232,9 +232,9 @@ func TestAnalyseHandler_TeamTournamentAnalysis(t *testing.T) {
 		log := logger.NewLogger("info")
 		handler := NewAnalyseHandler(mockService, log)
 		router := setupTestRouter(handler)
-		router.GET("/analyse/team/:teamId/tournament/:tournamentId/analyse", handler.TeamTournamentAnalysis)
+		router.GET("/analyse/team/:teamId/analysis", handler.TeamTournamentAnalysis)
 
-		req, _ := http.NewRequest("GET", "/analyse/team/100/tournament/1/analyse?last_n=5", nil)
+		req, _ := http.NewRequest("GET", "/analyse/team/100/analysis?tournament_id=1&season=2024&last_n=5", nil)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
@@ -262,9 +262,9 @@ func TestAnalyseHandler_TeamTournamentAnalysis(t *testing.T) {
 		log := logger.NewLogger("info")
 		handler := NewAnalyseHandler(mockService, log)
 		router := setupTestRouter(handler)
-		router.GET("/analyse/team/:teamId/tournament/:tournamentId/analyse", handler.TeamTournamentAnalysis)
+		router.GET("/analyse/team/:teamId/analysis", handler.TeamTournamentAnalysis)
 
-		req, _ := http.NewRequest("GET", "/analyse/team/100/tournament/1/analyse", nil)
+		req, _ := http.NewRequest("GET", "/analyse/team/100/analysis?tournament_id=1&season=2024", nil)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
@@ -275,9 +275,9 @@ func TestAnalyseHandler_TeamTournamentAnalysis(t *testing.T) {
 		log := logger.NewLogger("info")
 		handler := NewAnalyseHandler(&mockAnalyseService{}, log)
 		router := setupTestRouter(handler)
-		router.POST("/analyse/team/:teamId/tournament/:tournamentId/analyse", handler.MethodNotAllowed)
+		router.POST("/analyse/team/:teamId/analysis", handler.MethodNotAllowed)
 
-		req, _ := http.NewRequest("POST", "/analyse/team/100/tournament/1/analyse", bytes.NewBuffer([]byte("{}")))
+		req, _ := http.NewRequest("POST", "/analyse/team/100/analysis", bytes.NewBuffer([]byte("{}")))
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
@@ -296,9 +296,9 @@ func TestAnalyseHandler_TeamTournamentAnalysis(t *testing.T) {
 		log := logger.NewLogger("info")
 		handler := NewAnalyseHandler(mockService, log)
 		router := setupTestRouter(handler)
-		router.GET("/analyse/team/:teamId/tournament/:tournamentId/analyse", handler.TeamTournamentAnalysis)
+		router.GET("/analyse/team/:teamId/analysis", handler.TeamTournamentAnalysis)
 
-		req, _ := http.NewRequest("GET", "/analyse/team/100/tournament/1/analyse", nil)
+		req, _ := http.NewRequest("GET", "/analyse/team/100/analysis?tournament_id=1&season=2024", nil)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 

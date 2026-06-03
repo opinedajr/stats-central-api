@@ -32,16 +32,26 @@ func (h *AnalyseHandler) TeamTournamentAnalysis(c *gin.Context) {
 		return
 	}
 
-	tournamentIDStr := c.Param("tournamentId")
+	tournamentIDStr := c.Query("tournament_id")
+	if tournamentIDStr == "" {
+		h.handleError(c, errInvalidID)
+		return
+	}
 	tournamentID, err := strconv.ParseUint(tournamentIDStr, 10, 32)
 	if err != nil {
 		h.handleError(c, errInvalidID)
 		return
 	}
 
+	season := c.Query("season")
+	if season == "" {
+		h.handleError(c, errInvalidID)
+		return
+	}
+
 	lastN, _ := strconv.Atoi(c.DefaultQuery("last_n", strconv.Itoa(defaultLastN)))
 
-	output, err := h.service.TeamTournamentAnalysis(c.Request.Context(), uint(teamID), uint(tournamentID), lastN)
+	output, err := h.service.TeamTournamentAnalysis(c.Request.Context(), uint(teamID), uint(tournamentID), season, lastN)
 	if err != nil {
 		h.handleError(c, err)
 		return
