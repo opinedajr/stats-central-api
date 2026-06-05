@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/opinedajr/stats-central-api/internal/shared/logger"
+	"github.com/opinedajr/stats-central-api/internal/shared/pagination"
 )
 
 type Service interface {
@@ -52,17 +53,7 @@ func (s *service) CreateTournament(ctx context.Context, input CreateTournamentIn
 }
 
 func (s *service) ListTournaments(ctx context.Context, filter TournamentFilter, page int, pageSize int) ([]*TournamentOutput, int64, error) {
-	if page < 1 {
-		page = 1
-	}
-
-	if pageSize < 1 {
-		pageSize = 20
-	}
-
-	if pageSize > 100 {
-		pageSize = 100
-	}
+	page, pageSize = pagination.Normalize(page, pageSize)
 
 	tournaments, total, err := s.repo.List(ctx, filter, page, pageSize)
 	if err != nil {

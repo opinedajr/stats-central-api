@@ -52,8 +52,14 @@ func (h *TournamentHandler) Create(c *gin.Context) {
 }
 
 func (h *TournamentHandler) List(c *gin.Context) {
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
+	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if err != nil {
+		page = 1
+	}
+	pageSize, err := strconv.Atoi(c.DefaultQuery("page_size", "20"))
+	if err != nil {
+		pageSize = 20
+	}
 
 	var filter TournamentFilter
 
