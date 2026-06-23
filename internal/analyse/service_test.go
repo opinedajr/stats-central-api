@@ -61,6 +61,10 @@ func (m *mockMatchRepository) GetOverallStats(ctx context.Context, teamID uint, 
 	return m.overallStats, nil
 }
 
+func (m *mockMatchRepository) List(ctx context.Context, filter match.MatchFilter, page int, pageSize int) ([]*match.MatchEntity, int64, error) {
+	return nil, 0, nil
+}
+
 type mockTeamsRepository struct {
 	team *teams.Team
 	err  error
