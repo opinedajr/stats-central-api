@@ -17,7 +17,6 @@ func setupTestDB(t *testing.T) *gorm.DB {
 	err = db.Exec(`
 		CREATE TABLE jogos (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			sofascore_id INTEGER,
 			liga_id INTEGER NOT NULL,
 			temporada TEXT NOT NULL,
 			rodada INTEGER NOT NULL,
@@ -28,17 +27,32 @@ func setupTestDB(t *testing.T) *gorm.DB {
 			time_mandante_gols INTEGER NOT NULL,
 			time_visitante_id INTEGER NOT NULL,
 			time_visitante_gols INTEGER NOT NULL DEFAULT 0,
-				time_mandante_odd REAL,
-				time_visitante_odd REAL,
-				empate_odd REAL,
-				primeiro_marcar INTEGER,
-				segundo_marcar INTEGER,
-				terceiro_marcar INTEGER,
-				minuto_gol1 INTEGER,
-				minuto_gol2 INTEGER,
-				minuto_gol3 INTEGER
-			)
-		`).Error
+			time_mandante_odd REAL,
+			time_visitante_odd REAL,
+			empate_odd REAL,
+			btts_odd REAL,
+			under25_odd REAL,
+			primeiro_marcar INTEGER,
+			segundo_marcar INTEGER,
+			terceiro_marcar INTEGER,
+			minuto_gol1 INTEGER,
+			minuto_gol2 INTEGER,
+			minuto_gol3 INTEGER
+		)
+	`).Error
+	require.NoError(t, err)
+
+	err = db.Exec(`
+		CREATE TABLE teams (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL,
+			country TEXT NOT NULL DEFAULT '',
+			sofascore_id INTEGER,
+			sokkerpro_id INTEGER,
+			created_at DATETIME,
+			updated_at DATETIME
+		)
+	`).Error
 	require.NoError(t, err)
 
 	return db
@@ -46,9 +60,14 @@ func setupTestDB(t *testing.T) *gorm.DB {
 
 func insertTestMatch(t *testing.T, db *gorm.DB, id int, leagueID, homeTeamID, homeGoals, awayTeamID, awayGoals int, status string, timestamp int64, season string, tempo int) {
 	err := db.Exec(`
-		INSERT INTO jogos (id, sofascore_id, liga_id, temporada, rodada, data_timestamp, status, tempo, time_mandante_id, time_mandante_gols, time_visitante_id, time_visitante_gols)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-	`, id, nil, leagueID, season, 1, timestamp, status, tempo, homeTeamID, homeGoals, awayTeamID, awayGoals).Error
+		INSERT INTO jogos (id, liga_id, temporada, rodada, data_timestamp, status, tempo, time_mandante_id, time_mandante_gols, time_visitante_id, time_visitante_gols)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	`, id, leagueID, season, 1, timestamp, status, tempo, homeTeamID, homeGoals, awayTeamID, awayGoals).Error
+	require.NoError(t, err)
+}
+
+func insertTestTeam(t *testing.T, db *gorm.DB, id int, name string) {
+	err := db.Exec(`INSERT INTO teams (id, name, country) VALUES (?, ?, 'Brazil')`, id, name).Error
 	require.NoError(t, err)
 }
 
@@ -287,3 +306,140 @@ func TestMysqlRepository_filtersBySeason(t *testing.T) {
 	})
 }
 
+func TestMysqlRepository_List(t *testing.T) {
+	db := setupTestDB(t)
+	repo := NewMysqlRepository(db)
+	ctx := context.Background()
+
+	insertTestTeam(t, db, 100, "Flamengo")
+	insertTestTeam(t, db, 200, "Palmeiras")
+	insertTestTeam(t, db, 201, "Corinthians")
+	insertTestTeam(t, db, 202, "São Paulo")
+	insertTestTeam(t, db, 203, "Santos")
+
+	insertTestMatch(t, db, 1, 10, 100, 2, 200, 1, "finished", 1700000000, "2024", 3)
+	insertTestMatch(t, db, 2, 10, 201, 1, 202, 0, "finished", 1700001000, "2024", 3)
+	insertTestMatch(t, db, 3, 10, 100, 0, 203, 2, "fulltime", 1700002000, "2024", 3)
+	insertTestMatch(t, db, 4, 20, 100, 1, 200, 1, "finished", 1700003000, "2024", 3)
+	insertTestMatch(t, db, 5, 10, 200, 3, 100, 0, "notstarted", 1700004000, "2024", 3)
+
+	t.Run("returns all matches with no filters", func(t *testing.T) {
+		matches, total, err := repo.List(ctx, MatchFilter{}, 1, 20)
+
+		require.NoError(t, err)
+		assert.Equal(t, int64(5), total)
+		assert.Len(t, matches, 5)
+	})
+
+	t.Run("orders by data_timestamp DESC", func(t *testing.T) {
+		matches, _, err := repo.List(ctx, MatchFilter{}, 1, 20)
+
+		require.NoError(t, err)
+		assert.Equal(t, uint(5), matches[0].ID)
+		assert.Equal(t, uint(4), matches[1].ID)
+	})
+
+	t.Run("filters by tournament_id", func(t *testing.T) {
+		tournamentID := uint(10)
+		matches, total, err := repo.List(ctx, MatchFilter{TournamentID: &tournamentID}, 1, 20)
+
+		require.NoError(t, err)
+		assert.Equal(t, int64(4), total)
+		assert.Len(t, matches, 4)
+	})
+
+	t.Run("filters by season", func(t *testing.T) {
+		season := "2024"
+		matches, total, err := repo.List(ctx, MatchFilter{Season: &season}, 1, 20)
+
+		require.NoError(t, err)
+		assert.Equal(t, int64(5), total)
+		assert.Len(t, matches, 5)
+	})
+
+	t.Run("filters by status", func(t *testing.T) {
+		status := "finished"
+		matches, total, err := repo.List(ctx, MatchFilter{Status: &status}, 1, 20)
+
+		require.NoError(t, err)
+		assert.Equal(t, int64(3), total)
+		assert.Len(t, matches, 3)
+	})
+
+	t.Run("filters by home_team_id", func(t *testing.T) {
+		homeTeamID := uint(100)
+		matches, total, err := repo.List(ctx, MatchFilter{HomeTeamID: &homeTeamID}, 1, 20)
+
+		require.NoError(t, err)
+		assert.Equal(t, int64(3), total)
+		assert.Len(t, matches, 3)
+	})
+
+	t.Run("filters by away_team_id", func(t *testing.T) {
+		awayTeamID := uint(100)
+		matches, total, err := repo.List(ctx, MatchFilter{AwayTeamID: &awayTeamID}, 1, 20)
+
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), total)
+		assert.Len(t, matches, 1)
+	})
+
+	t.Run("combines multiple filters with AND logic", func(t *testing.T) {
+		tournamentID := uint(10)
+		status := "finished"
+		homeTeamID := uint(100)
+		matches, total, err := repo.List(ctx, MatchFilter{
+			TournamentID: &tournamentID,
+			Status:       &status,
+			HomeTeamID:   &homeTeamID,
+		}, 1, 20)
+
+		require.NoError(t, err)
+		assert.Equal(t, int64(1), total)
+		assert.Len(t, matches, 1)
+		assert.Equal(t, uint(1), matches[0].ID)
+	})
+
+	t.Run("returns empty slice when no matches found", func(t *testing.T) {
+		tournamentID := uint(999)
+		matches, total, err := repo.List(ctx, MatchFilter{TournamentID: &tournamentID}, 1, 20)
+
+		require.NoError(t, err)
+		assert.Equal(t, int64(0), total)
+		assert.Empty(t, matches)
+	})
+
+	t.Run("paginates correctly", func(t *testing.T) {
+		matches, total, err := repo.List(ctx, MatchFilter{}, 1, 2)
+
+		require.NoError(t, err)
+		assert.Equal(t, int64(5), total)
+		assert.Len(t, matches, 2)
+
+		matches2, _, err := repo.List(ctx, MatchFilter{}, 2, 2)
+
+		require.NoError(t, err)
+		assert.Len(t, matches2, 2)
+
+		matches3, _, err := repo.List(ctx, MatchFilter{}, 3, 2)
+
+		require.NoError(t, err)
+		assert.Len(t, matches3, 1)
+	})
+
+	t.Run("populates team names from teams table", func(t *testing.T) {
+		matches, _, err := repo.List(ctx, MatchFilter{}, 1, 5)
+
+		require.NoError(t, err)
+		assert.Equal(t, "Flamengo", *matches[4].HomeTeamName)
+		assert.Equal(t, "Palmeiras", *matches[4].AwayTeamName)
+	})
+
+	t.Run("returns page beyond available with empty results", func(t *testing.T) {
+		matches, total, err := repo.List(ctx, MatchFilter{}, 100, 20)
+
+		require.NoError(t, err)
+		assert.Equal(t, int64(5), total)
+		assert.Empty(t, matches)
+	})
+}
