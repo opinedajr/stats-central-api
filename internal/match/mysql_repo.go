@@ -20,7 +20,8 @@ func (r *mysqlRepository) List(ctx context.Context, filter MatchFilter, page int
 	var matches []*MatchEntity
 	var total int64
 
-	query := r.db.WithContext(ctx).Table("jogos")
+	query := r.db.WithContext(ctx).Table("jogos").
+		Where("tempo = ?", FullTimeMatchDuration)
 
 	if filter.TournamentID != nil {
 		query = query.Where("liga_id = ?", *filter.TournamentID)

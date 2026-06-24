@@ -443,3 +443,21 @@ func TestMysqlRepository_List(t *testing.T) {
 		assert.Empty(t, matches)
 	})
 }
+
+func TestMysqlRepository_List_filtersByTempo(t *testing.T) {
+	db := setupTestDB(t)
+	repo := NewMysqlRepository(db)
+	ctx := context.Background()
+
+	insertTestMatch(t, db, 1, 10, 100, 2, 200, 1, "fulltime", 1700000000, "2024", 1)
+	insertTestMatch(t, db, 2, 10, 100, 2, 200, 1, "fulltime", 1700000000, "2024", 2)
+	insertTestMatch(t, db, 3, 10, 100, 2, 200, 1, "fulltime", 1700000000, "2024", 3)
+
+	matches, total, err := repo.List(ctx, MatchFilter{}, 1, 20)
+
+	require.NoError(t, err)
+	assert.Equal(t, int64(1), total)
+	require.Len(t, matches, 1)
+	assert.Equal(t, uint(3), matches[0].ID)
+	assert.Equal(t, FullTimeMatchDuration, matches[0].Time)
+}
