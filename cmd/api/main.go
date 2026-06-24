@@ -47,6 +47,15 @@ func main() {
 				analysis.PATCH("", container.AnalyseHandler().MethodNotAllowed)
 			}
 		}
+
+		matches := v1.Group("/matches")
+		{
+			matches.GET("", container.MatchHandler().List)
+			matches.POST("", container.MatchHandler().MethodNotAllowed)
+			matches.PUT("", container.MatchHandler().MethodNotAllowed)
+			matches.DELETE("", container.MatchHandler().MethodNotAllowed)
+			matches.PATCH("", container.MatchHandler().MethodNotAllowed)
+		}
 	}
 
 	log.Fatal(r.Run(":3030"))
