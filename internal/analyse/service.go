@@ -23,6 +23,8 @@ type analyseService struct {
 	teamsRepo   teams.Repository
 }
 
+var _ Service = (*analyseService)(nil)
+
 func NewAnalyseService(statsRepo StatsRepository, matchesRepo match.Repository, teamsRepo teams.Repository) Service {
 	return &analyseService{
 		statsRepo:   statsRepo,

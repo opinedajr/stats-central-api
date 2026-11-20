@@ -10,6 +10,8 @@ type slogLogger struct {
 	logger *slog.Logger
 }
 
+var _ Logger = (*slogLogger)(nil)
+
 func NewLogger(level string) Logger {
 	var slogLevel slog.Level
 	switch level {

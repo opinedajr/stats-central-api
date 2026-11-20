@@ -6,19 +6,21 @@ import (
 	"github.com/opinedajr/stats-central-api/internal/infrastructure/database"
 )
 
-type ServiceInterface interface {
+type Service interface {
 	Check() []Health
 }
 
-type Service struct {
+type service struct {
 	dbConn database.DatabaseConnection
 }
 
-func NewHealthCheckService(dbConn database.DatabaseConnection) *Service {
-	return &Service{dbConn: dbConn}
+var _ Service = (*service)(nil)
+
+func NewHealthCheckService(dbConn database.DatabaseConnection) Service {
+	return &service{dbConn: dbConn}
 }
 
-func (s *Service) Check() []Health {
+func (s *service) Check() []Health {
 	healthChecks := []Health{
 		{
 			ServiceName: ServiceName,
@@ -33,7 +35,7 @@ func (s *Service) Check() []Health {
 	return healthChecks
 }
 
-func (s *Service) checkDatabase() Health {
+func (s *service) checkDatabase() Health {
 	if s.dbConn == nil {
 		return Health{
 			ServiceName: DatabaseServiceName,

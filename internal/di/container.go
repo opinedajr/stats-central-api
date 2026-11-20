@@ -42,7 +42,7 @@ type HandlerDependencies struct {
 }
 
 type ServiceDependencies struct {
-	healthcheckService *healthcheck.Service
+	healthcheckService healthcheck.Service
 	tournamentService  tournament.Service
 	teamsService       teams.Service
 	matchService       match.Service
@@ -101,7 +101,7 @@ func (c *Container) DB() *gorm.DB {
 	return c.db
 }
 
-func (c *Container) HealthCheckService() *healthcheck.Service {
+func (c *Container) HealthCheckService() healthcheck.Service {
 	if c.services.healthcheckService == nil {
 		_ = c.DB()
 		c.services.healthcheckService = healthcheck.NewHealthCheckService(c.dbConn)

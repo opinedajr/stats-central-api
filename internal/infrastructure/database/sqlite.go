@@ -17,6 +17,9 @@ type SQLiteDatabase struct {
 	sqlDB *sql.DB
 }
 
+var _ DatabaseConnection = (*SQLiteDatabase)(nil)
+var _ TestDatabaseConnection = (*SQLiteDatabase)(nil)
+
 func NewSQLiteDatabase(t *testing.T) *SQLiteDatabase {
 	return &SQLiteDatabase{
 		t: t,

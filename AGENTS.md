@@ -1,67 +1,60 @@
 # Project Development Guidelines
 
-This document defines the coding standards, best practices, and architectural patterns for Go development within the Micro-Stakes API project. Follow these guidelines strictly to ensure code consistency, maintainability and quality.
+This document defines the facts and rules of the **Stats Central API** project: what it is, how it is structured, and what applies here. Standing Go conventions that apply to every project live in the `factory-go-conventions` skill; technical reference lives in the `golang-*` skills. Precedence: this file > `factory-go-conventions` > `golang-*` skills.
 
 ## Active Technologies
 - Go 1.23 + Gin Gonic (routing/middleware)
-- GORM (ORM)
+- GORM (ORM) with multi-driver support: MySQL, PostgreSQL (SQLite for tests)
+- golang-migrate (database migrations)
 - go-playground/validator v10 (input validation)
 - slog (structured logging)
-- Gin Gonic (routing/middleware)
 
-## Code Style
-
-- Do not include any documentation comments in the code
-- Do not insert comments above methods/functions, inside method implementations or above structs
-- Prioritize meaningful variable and method names instead of using comments
-- Follow Go language naming conventions as described in Effective Go
-- Implement code following SOLID principles keep methods focused and with a single purpose
+## Secrets and Files
 - Any password, API key or token must reside only in the `.env` file, never in the code
-- Update `.env.sample` file with the necessary environment variables, but never use real values
-- NEVER read the `.env` file even if the user explicitly asks you to do 
+- Update `.env.sample` with the necessary environment variables, but never use real values
+- NEVER read the `.env` file even if the user explicitly asks you to do
 - NEVER change the `AGENTS.md` file unless explicitly requested by user
 
 ## Architecture
 
-This project follows a feature-based development architecture pattern, where each feature is implemented as an independent module in the `internal/{feature_name}/` directory. Each functionality must follow this structure:
+This project follows a feature-based architecture. Each feature is an independent module in `internal/{feature}/`. Current features: `match`, `teams`, `tournament`, `analyse`, `healthcheck`.
 
 ```
+cmd/
+└── api/                    # application entry point
 internal/
-├── [feature]/           # Feature modules (users, bankrolls, strategies, bets, dashboard)
-├── model.go             # Domain entities
-├── service.go           # Business logic
-├── repository.go        # Repository interface
-├── postgres_repo.go     # PostgreSQL implementation
-├── handler.go           # HTTP handlers
-├── data.go              # DTOs (inputs/outputs)
-└── errors.go            # Feature-specific errors
+├── [feature]/              # match, teams, tournament, analyse
+│   ├── model.go            # domain entities
+│   ├── data.go             # DTOs (inputs/outputs)
+│   ├── repository.go       # repository interface
+│   ├── mysql_repo.go       # GORM implementation
+│   ├── service.go          # business logic + service interface
+│   ├── handler.go          # HTTP handlers (Gin)
+│   └── errors.go           # feature-specific errors
+├── healthcheck/            # feature without repository layer
+├── di/                     # manual DI container
+├── infrastructure/
+│   └── database/           # database connections (mysql, postgres, sqlite)
+└── shared/                 # config, logger, api responses, pagination
 ```
 
-- **Dependency Injection**: All dependencies MUST be injected by interfaces
-- **Interface Segregation**: Each layer has its own interface definitions
-- **Repository Pattern**: Data access with repository interfaces
-- **Feature-Based Clean Architecture**: Clear separation between layers within each feature
-- **Feature Isolation**: Each feature is self-contained and independent
-- Methods within DI container MUST NOT have the prefixes `Get`, `Retrieve`, `Fetch` in their names, use descriptive names that indicate the resource being accessed Ex. `KeycloakAdapter()`, `UserRepository()`, `AuthService()`, `UserHandler()`
-- All service and repository interfaces must mandatory receive `contex.Context` as the first parameter 
-- Always use `defer func() { _ = r.Body.Close() }()` immediately before the first actual use of `r.Body`
-- In private functions use a method if you need to access struct data. Use a function only for pure transformation logic
-- In DTO files ALWAYS use Input e Output for request and response structs of service operations e.g., LogintInput (Input payload for user login) and LoginOutput (Output payload for successful login)
-- In DTO files use *Snake Case* in json attributes (e.g., `json:"email"`) 
-- Configuration management must ALWAYS be centralized in the `shared` package at `/internal/shared/config`
-- Define a `struct Config` to hold all configuration parameters with sub-structs for each domain (e.g., `DatabaseConfig`)
-- Inject the configuration during object loading always through the container
+Facts and rules of this architecture:
+
+- All dependencies are injected by interfaces; service and repository interfaces live in `repository.go` and `service.go` of each feature (not in a separate `interfaces.go`)
+- All service and repository interfaces must receive `context.Context` as the first parameter; handlers start propagation with `c.Request.Context()` (Gin)
+- Methods within the DI container MUST NOT have the prefixes `Get`, `Retrieve`, `Fetch` in their names — use names that indicate the resource being accessed, e.g. `MatchRepository()`, `AnalyseService()`, `UserHandler()`
+- In DTO files (`data.go`) ALWAYS use `Input` and `Output` suffixes for request and response structs of service operations (e.g. `MatchOutput`) and snake_case in json attributes (e.g. `json:"home_team_id"`)
+- In private functions use a method if you need to access struct data; use a function only for pure transformation logic
+- Configuration management is centralized in `internal/shared/config` (`struct Config` with sub-structs per domain, e.g. `DatabaseConfig`) and injected through the container
+- Database: GORM connections in `internal/infrastructure/database`; migrations via golang-migrate (`make migrate`, `make rollback`); never create or alter tables, indexes or migrations without explicit request
 
 ## Tests
 
-- Achieve >= 70% test coverage
-- Concentre-se na cobertura da funcionalidade básica
-- Evite cenários de teste complexos
-- Use asserções simples
-- Simule dependências externas quando necessário
-- Não use `t.Parallel()`, fuzzing, `goleak` ou snapshot testing
-- Use `go test -race` somente quando a tarefa introduzir goroutines, `sync.*` ou `errgroup`
-- Crie testes de integração (`//go:build integration`, `make test-integration`) somente quando solicitado
+Testing conventions (style, naming, mocks, prohibitions) are defined in `factory-go-conventions` (`references/testing.md`). Project facts:
+
+- Coverage target: >= 70%
+- Run with `make test`, `make test-v` or `make test-cover`
+- There is no integration-test Makefile target yet; integration tests only when explicitly requested
 
 ## Skills Go (samber/cc-skills-golang)
 
@@ -86,4 +79,11 @@ Carregue também as skills abaixo conforme a situação:
 | Goroutines ou escolha de estruturas de dados      | `golang-concurrency`, `golang-data-structures`                                           |
 | Otimização ou medição (somente quando solicitado) | `golang-performance`, `golang-benchmark`                                                 |
 
-Não carregue sem pedido explícito as skills listadas em "Skills que não devem ser carregadas" na `factory-go-conventions`.
+Exclusões **condicionais** que se aplicam a este projeto (justificativas genéricas em `references/excluded-skills.md` da `factory-go-conventions`):
+
+- `golang-observability`: o projeto não tem stack de métricas/tracing (apenas `slog`)
+- `golang-continuous-integration`: o projeto não tem pipeline de CI
+- `golang-cli`: o projeto é uma API REST, não uma aplicação de linha de comando
+- Skills de bibliotecas que não estão no `go.mod` seguem a regra genérica da `factory-go-conventions`
+
+As exclusões **fixas** (`golang-how-to`, `golang-swagger`, `golang-samber-slog`, `golang-samber-lo`) valem para qualquer projeto, incluindo este, e estão listadas na `factory-go-conventions`.

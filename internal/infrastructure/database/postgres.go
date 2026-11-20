@@ -19,6 +19,8 @@ type PostgresDatabase struct {
 	sqlDB *sql.DB
 }
 
+var _ DatabaseConnection = (*PostgresDatabase)(nil)
+
 func NewPostgresDatabase(cfg config.DatabaseConfig, log logger.Logger) *PostgresDatabase {
 	return &PostgresDatabase{
 		cfg: cfg,

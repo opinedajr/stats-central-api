@@ -11,6 +11,8 @@ type mysqlStatsRepository struct {
 	db *gorm.DB
 }
 
+var _ StatsRepository = (*mysqlStatsRepository)(nil)
+
 func NewMysqlStatsRepository(db *gorm.DB) StatsRepository {
 	return &mysqlStatsRepository{
 		db: db,
