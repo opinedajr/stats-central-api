@@ -10,6 +10,8 @@ type mysqlRepository struct {
 	db *gorm.DB
 }
 
+var _ Repository = (*mysqlRepository)(nil)
+
 func NewMysqlRepository(db *gorm.DB) Repository {
 	return &mysqlRepository{
 		db: db,

@@ -17,6 +17,8 @@ type service struct {
 	logger logger.Logger
 }
 
+var _ Service = (*service)(nil)
+
 func NewService(repo Repository, logger logger.Logger) Service {
 	return &service{
 		repo:   repo,

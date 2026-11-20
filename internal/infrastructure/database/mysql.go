@@ -19,6 +19,8 @@ type MySQLDatabase struct {
 	sqlDB *sql.DB
 }
 
+var _ DatabaseConnection = (*MySQLDatabase)(nil)
+
 func NewMySQLDatabase(cfg config.DatabaseConfig, log logger.Logger) *MySQLDatabase {
 	return &MySQLDatabase{
 		cfg: cfg,
