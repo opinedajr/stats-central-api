@@ -9,6 +9,7 @@ import (
 
 func main() {
 	container := di.NewContainer()
+	port := container.Config().Server.Port
 	r := gin.Default()
 
 	r.GET("/health", container.HealthCheckHandler().Handle)
@@ -58,5 +59,5 @@ func main() {
 		}
 	}
 
-	log.Fatal(r.Run(":3030"))
+	log.Fatal(r.Run(":" + port))
 }

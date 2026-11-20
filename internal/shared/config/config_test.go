@@ -44,7 +44,7 @@ func TestLoad_Success(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.NotNil(t, cfg)
-		assert.Equal(t, "3003", cfg.Server.Port)         // Default SERVER_PORT
+		assert.Equal(t, "3030", cfg.Server.Port)         // Default SERVER_PORT
 		assert.Equal(t, "postgres", cfg.Database.Driver) // Default DB_DRIVER
 		assert.Equal(t, "error", cfg.Logging.Level)      // Default LOG_LEVEL
 	})
