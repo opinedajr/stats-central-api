@@ -2,7 +2,7 @@ include .env
 
 .PHONY: help setup dev dev-up dev-down build test clean docker docker-down install-deps run
 
-BINARY_NAME=main
+BINARY_NAME=stats-central-api
 DOCKER_COMPOSE_FILE=docker-compose.yml
 DOCKER_COMPOSE_DEV_FILE=docker-compose.dev.yml
 
@@ -36,7 +36,7 @@ dev-down: ## Para os serviços de desenvolvimento
 # Build
 build: ## Compila a aplicação
 	@echo "🔨 Compilando aplicação..."
-	@go build -o bin/$(BINARY_NAME) cmd/api/main.go
+	@go build -ldflags='-s -w' -o bin/$(BINARY_NAME) cmd/api/main.go
 	@echo "✅ Binário criado: bin/$(BINARY_NAME)"
 
 # Executar aplicação compilada

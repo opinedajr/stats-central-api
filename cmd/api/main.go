@@ -9,6 +9,7 @@ import (
 
 func main() {
 	container := di.NewContainer()
+	port := container.Config().Server.Port
 	r := gin.Default()
 
 	r.GET("/health", container.HealthCheckHandler().Handle)
@@ -47,7 +48,16 @@ func main() {
 				analysis.PATCH("", container.AnalyseHandler().MethodNotAllowed)
 			}
 		}
+
+		matches := v1.Group("/matches")
+		{
+			matches.GET("", container.MatchHandler().List)
+			matches.POST("", container.MatchHandler().MethodNotAllowed)
+			matches.PUT("", container.MatchHandler().MethodNotAllowed)
+			matches.DELETE("", container.MatchHandler().MethodNotAllowed)
+			matches.PATCH("", container.MatchHandler().MethodNotAllowed)
+		}
 	}
 
-	log.Fatal(r.Run(":3030"))
+	log.Fatal(r.Run(":" + port))
 }

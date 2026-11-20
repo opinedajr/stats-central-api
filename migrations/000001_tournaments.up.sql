@@ -1,4 +1,4 @@
-CREATE TABLE tournaments (
+CREATE TABLE IF NOT EXISTS tournaments (
   id int(11) NOT NULL AUTO_INCREMENT,
   sokkerpro_id int(11) DEFAULT NULL,
   playscores_id int(11) DEFAULT NULL,

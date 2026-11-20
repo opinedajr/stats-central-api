@@ -37,6 +37,7 @@ type HandlerDependencies struct {
 	healthcheckHandler *healthcheck.Handler
 	tournamentHandler  *tournament.TournamentHandler
 	teamsHandler       *teams.TeamHandler
+	matchHandler       *match.MatchHandler
 	analyseHandler     *analyse.AnalyseHandler
 }
 
@@ -44,6 +45,7 @@ type ServiceDependencies struct {
 	healthcheckService *healthcheck.Service
 	tournamentService  tournament.Service
 	teamsService       teams.Service
+	matchService       match.Service
 	analyseService     analyse.Service
 }
 
@@ -161,6 +163,20 @@ func (c *Container) MatchRepository() match.Repository {
 		c.repositories.matchRepository = match.NewMysqlRepository(c.DB())
 	}
 	return c.repositories.matchRepository
+}
+
+func (c *Container) MatchService() match.Service {
+	if c.services.matchService == nil {
+		c.services.matchService = match.NewService(c.MatchRepository(), c.Logger())
+	}
+	return c.services.matchService
+}
+
+func (c *Container) MatchHandler() *match.MatchHandler {
+	if c.handlers.matchHandler == nil {
+		c.handlers.matchHandler = match.NewMatchHandler(c.MatchService(), c.Logger())
+	}
+	return c.handlers.matchHandler
 }
 
 func (c *Container) StatsRepository() analyse.StatsRepository {

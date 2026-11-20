@@ -1,4 +1,5 @@
 # Binários
+bin/
 *.exe
 *.exe~
 *.dll
@@ -25,7 +26,14 @@ go.work
 # Code Agents
 .github
 .opencode
+.claude
+.agents
 .specify
+.specs
+.codegraph/
+
+# Agent rules
+CLAUDE.md
 
 # OS
 .DS_Store
@@ -37,3 +45,7 @@ Thumbs.db
 # Environment
 .env
 .env.local
+
+# MemPalace per-project files (issue #185)
+mempalace.yaml
+entities.json
